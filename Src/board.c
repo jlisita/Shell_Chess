@@ -8,30 +8,30 @@ int canMovePiece(Color player,Square board[8][8], int i, int j, int k, int l)
 	{
 		Piece* piece = board[i][j].piece;
 
-		if( getColor(board,i,j) == player)
+		if( getColor(i,j) == player)
 		{
-			if( ( ( isEmpty(board,k,l) || ((getColor(board,i,j)==WHITE) &&  (getColor(board,k,l)==BLACK)) )
-	           || ( isEmpty(board,k,l) || ((getColor(board,i,j)==BLACK) &&  (getColor(board,k,l)==WHITE)) ) ) )
+			if( ( ( isEmptySquare(k,l) || ((getColor(i,j)==WHITE) &&  (getColor(k,l)==BLACK)) )
+	           || ( isEmptySquare(k,l) || ((getColor(i,j)==BLACK) &&  (getColor(k,l)==WHITE)) ) ) )
 			{
 				switch(piece->name)
 				{
 					case KING:
-						return canMoveKing(board,i,j,k,l);
+						return canMoveKing(i,j,k,l);
 						break;
 					case QUEEN:
-						return canMoveQueen(board,i,j,k,l);
+						return canMoveQueen(i,j,k,l);
 						break;
 					case BISHOP:
-						return canMoveBishop(board,i,j,k,l);
+						return canMoveBishop(i,j,k,l);
 						break;
 					case ROOK:
-						return canMoveRook(board,i,j,k,l);
+						return canMoveRook(i,j,k,l);
 						break;
 					case KNIGHT:
-						return canMoveKnight(board,i,j,k,l);
+						return canMoveKnight(i,j,k,l);
 						break;
 					case PAWN:
-						return canMovePawn(board,i,j,k,l);
+						return canMovePawn(i,j,k,l);
 						break;
 				}
 			}
@@ -56,7 +56,7 @@ int canMovePiece(Color player,Square board[8][8], int i, int j, int k, int l)
 	return 0;
 }
 
-int canMoveKing(Square board[8][8], int i, int j, int k, int l)
+int canMoveKing(int i, int j, int k, int l)
 {
 	if( ( (k-i==1) &&  ( (j==l) || (l-j==1) || (l-j==-1) ) )
 	||  ( (k-i==-1) && ( (j==l) || (l-j==1) || (l-j==-1) ) )
@@ -67,9 +67,9 @@ int canMoveKing(Square board[8][8], int i, int j, int k, int l)
 	return 0;
 }
 
-int canMoveQueen(Square board[8][8], int i, int j, int k, int l)
+int canMoveQueen(int i, int j, int k, int l)
 {
-	if(isEmptyBetween(board,i,j,k,l)
+	if(isEmptyBetween(i,j,k,l)
 		&& ( (k-i==l-j) || (k-i==j-l) || (k-i==0) || (l-j==0) ) )
 	{
 		return 1;
@@ -77,9 +77,9 @@ int canMoveQueen(Square board[8][8], int i, int j, int k, int l)
 	return 0;
 }
 
-int canMoveBishop(Square board[8][8], int i, int j, int k, int l)
+int canMoveBishop(int i, int j, int k, int l)
 {
-	if(isEmptyBetween(board,i,j,k,l)
+	if(isEmptyBetween(i,j,k,l)
 	&&  ( (k-i==l-j) || (k-i==j-l) ) )
 	{
 		return 1;
@@ -87,9 +87,9 @@ int canMoveBishop(Square board[8][8], int i, int j, int k, int l)
 	return 0;
 }
 
-int canMoveRook(Square board[8][8], int i, int j, int k, int l)
+int canMoveRook(int i, int j, int k, int l)
 {
-	if(isEmptyBetween(board,i,j,k,l)
+	if(isEmptyBetween(i,j,k,l)
 	&&  ( (k-i==0) || (l-j==0) ))
 	{
 		return 1;
@@ -97,7 +97,7 @@ int canMoveRook(Square board[8][8], int i, int j, int k, int l)
 	return 0;
 }
 
-int canMoveKnight(Square board[8][8], int i, int j, int k, int l)
+int canMoveKnight(int i, int j, int k, int l)
 {
 
 	if  ( ( (k-i==2) && ( (l-j==1) || (l-j==-1) ) ) || ( (k-i==-2) && ( (l-j==1) || (l-j==-1) ) )
@@ -108,22 +108,22 @@ int canMoveKnight(Square board[8][8], int i, int j, int k, int l)
      return 0;
 }
 
-int canMovePawn(Square board[8][8], int i, int j, int k, int l)
+int canMovePawn(int i, int j, int k, int l)
 {
-	if(getColor(board,i,j) == WHITE)
+	if(getColor(i,j) == WHITE)
 	{
-		if( ( (i==1) && (j==l) && (k-i==2) && isEmpty(board,i+1,l) && isEmpty(board,k,l) )
-	    || ( (j==l) && (k-i == 1) && isEmpty(board,k,l) )
-	    || ( (k==i+1) && ((l==j+1) || (l==j-1)) && !isEmpty(board,k,l) && (getColor(board,k,l)==BLACK) ) )
+		if( ( (i==1) && (j==l) && (k-i==2) && isEmptySquare(i+1,l) && isEmptySquare(k,l) )
+	    || ( (j==l) && (k-i == 1) && isEmptySquare(k,l) )
+	    || ( (k==i+1) && ((l==j+1) || (l==j-1)) && !isEmptySquare(k,l) && (getColor(k,l)==BLACK) ) )
 		{
 			return 1;
 		}
 	}
 	else
 	{
-		if( ( (i==6) && (j==l) && (k-i==-2) && isEmpty(board,i-1,l) && isEmpty(board,k,l) )
-		|| ( (j==l) && (k-i==-1) && isEmpty(board,k,l) )
-		|| ( (k==i-1) && ((l==j-1) || (l==j+1)) && !isEmpty(board,k,l) && (getColor(board,k,l)==BLACK) ) )
+		if( ( (i==6) && (j==l) && (k-i==-2) && isEmptySquare(i-1,l) && isEmptySquare(k,l) )
+		|| ( (j==l) && (k-i==-1) && isEmptySquare(k,l) )
+		|| ( (k==i-1) && ((l==j-1) || (l==j+1)) && !isEmptySquare(k,l) && (getColor(k,l)==BLACK) ) )
 		{
 			return 1;
 		}
@@ -141,12 +141,12 @@ void movePiece(Square board[8][8], int i, int j, int k, int l)
 	board[i][j].isOccupied = 0;
 }
 
-int isEmpty(Square board[8][8], int i,int j)
+int isEmptySquare(int i,int j)
 {
-	return !board[i][j].isOccupied;
+	return !cb.array[i][j].isOccupied;
 }
 
-int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
+int isEmptyBetween(int i, int j, int k, int l)
 {
 	int n,m;
 	if(k-i==0) // horizontal move
@@ -155,7 +155,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(n=j+1;n<l;n++)
 			{
-				if(!isEmpty(board,i,n))
+				if(!isEmptySquare(i,n))
 				{
 					return 0;
 				}
@@ -165,7 +165,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(n=j-1;n>l;n--)
 			{
-				if(!isEmpty(board,i,n))
+				if(!isEmptySquare(i,n))
 				{
 					return 0;
 				}
@@ -179,7 +179,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(m=i+1;m<k;m++)
 			{
-				if(!isEmpty(board,m,j))
+				if(!isEmptySquare(m,j))
 				{
 					return 0;
 				}
@@ -189,7 +189,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(m=i-1;m>k;m--)
 			{
-				if(!isEmpty(board,m,j))
+				if(!isEmptySquare(m,j))
 				{
 					return 0;
 				}
@@ -203,7 +203,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(n=1;n<k-i;n++)
 			{
-				if(!isEmpty(board,i+n,j+n))
+				if(!isEmptySquare(i+n,j+n))
 				{
 					return 0;
 				}
@@ -213,7 +213,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(n=1;n<k-i;n++)
 			{
-				if(!isEmpty(board,i+n,j-n))
+				if(!isEmptySquare(i+n,j-n))
 				{
 					return 0;
 				}
@@ -223,7 +223,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(n=1;n<k-i;n++)
 			{
-				if(!isEmpty(board,i-n,j+n))
+				if(!isEmptySquare(i-n,j+n))
 				{
 					return 0;
 				}
@@ -233,7 +233,7 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 		{
 			for(n=1;n<k-i;n++)
 			{
-				if(!isEmpty(board,i-n,j-n))
+				if(!isEmptySquare(i-n,j-n))
 				{
 					return 0;
 				}
@@ -243,9 +243,9 @@ int isEmptyBetween(Square board[8][8], int i, int j, int k, int l)
 	return 1;
 }
 
-Color getColor(Square board[8][8], int i, int j)
+Color getColor(int i, int j)
 {
-	return board[i][j].piece->color;
+	return cb.array[i][j].piece->color;
 }
 
 int rankIndexToInt(char c)
@@ -314,7 +314,7 @@ int fileIndexToInt(char c)
 	return i;
 }
 
-void initializeBoard(Square board[8][8])
+void initializeBoard()
 {
 	int i,j;
 	for(i=0;i<8;i++)
@@ -323,42 +323,42 @@ void initializeBoard(Square board[8][8])
 		{
 			if(i<2 || i>5)
 			{
-				board[i][j].isOccupied = 1;
-				board[i][j].piece = malloc(sizeof(Piece));
+				cb.array[i][j].isOccupied = 1;
+				cb.array[i][j].piece = malloc(sizeof(Piece));
 				if(i<2)
 				{
-					board[i][j].piece->color = WHITE;
+					cb.array[i][j].piece->color = WHITE;
 					if(i==1)
 					{
-						board[i][j].piece->name = PAWN;
+						cb.array[i][j].piece->name = PAWN;
 					}
 				}
 				else if(i>5)
 				{
-					board[i][j].piece->color = BLACK;
+					cb.array[i][j].piece->color = BLACK;
 					if(i==6)
 					{
-						board[i][j].piece->name = PAWN;
+						cb.array[i][j].piece->name = PAWN;
 					}
 
 				}
 			}
 			else
 			{
-				board[i][j].isOccupied = 0;
-				board[i][j].piece = NULL;
+				cb.array[i][j].isOccupied = 0;
+				cb.array[i][j].piece = NULL;
 			}
 		}
 	}
-	board[0][0].piece->name = board[0][7].piece->name = board[7][0].piece->name = board[7][7].piece->name = ROOK;
-	board[0][1].piece->name = board[0][6].piece->name = board[7][1].piece->name = board[7][6].piece->name = KNIGHT;
-	board[0][2].piece->name = board[0][5].piece->name = board[7][2].piece->name = board[7][5].piece->name = BISHOP;
-	board[0][3].piece->name = board[7][3].piece->name = QUEEN;
-	board[0][4].piece->name = board[7][4].piece->name = KING;
+	cb.array[0][0].piece->name = cb.array[0][7].piece->name = cb.array[7][0].piece->name = cb.array[7][7].piece->name = ROOK;
+	cb.array[0][1].piece->name = cb.array[0][6].piece->name = cb.array[7][1].piece->name = cb.array[7][6].piece->name = KNIGHT;
+	cb.array[0][2].piece->name = cb.array[0][5].piece->name = cb.array[7][2].piece->name = cb.array[7][5].piece->name = BISHOP;
+	cb.array[0][3].piece->name = cb.array[7][3].piece->name = QUEEN;
+	cb.array[0][4].piece->name = cb.array[7][4].piece->name = KING;
 
 }
 
-void printfBoard(Square board[8][8],Color player)
+void printfBoard(Color player)
 {
 
 	int i,j;
@@ -372,9 +372,9 @@ void printfBoard(Square board[8][8],Color player)
 			printf("%c | ",rankIndex[i]);
 			for(j=0;j<8;j++)
 			{
-				if(board[i][j].isOccupied)
+				if(cb.array[i][j].isOccupied)
 				{
-					printfPiece(board[i][j].piece);
+					printfPiece(cb.array[i][j].piece);
 				}
 				else
 				{
@@ -399,9 +399,9 @@ void printfBoard(Square board[8][8],Color player)
 			printf("%c | ",rankIndex[i]);
 			for(j=7;j>=0;j--)
 			{
-				if(board[i][j].isOccupied)
+				if(cb.array[i][j].isOccupied)
 				{
-					printfPiece(board[i][j].piece);
+					printfPiece(cb.array[i][j].piece);
 				}
 				else
 				{

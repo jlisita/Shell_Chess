@@ -33,21 +33,27 @@ struct Square
 	Piece* piece;
 };
 
-void initializeBoard(Square board[8][8]);
-void printfBoard(Square board[8][8], Color player);
+typedef struct ChessBoard ChessBoard;
+struct ChessBoard
+{
+	Square array[8][8];
+}cb;
+
+void initializeBoard();
+void printfBoard(Color player);
 void printfPiece(Piece* piece);
 int rankIndexToInt(char c);
 int fileIndexToInt(char c);
-int isEmpty(Square board[8][8],int i,int j);
-int isEmptyBetween(Square board[8][8],int i, int j, int k, int l);
-Color getColor(Square board[8][8],int i, int j);
+int isEmptySquare(int i,int j);
+int isEmptyBetween(int i, int j, int k, int l);
+Color getColor(int i, int j);
 int canMovePiece(Color player,Square board[8][8], int i, int j, int k, int l);
-int canMoveKing(Square board[8][8], int i, int j, int k, int l);
-int canMoveQueen(Square board[8][8], int i, int j, int k, int l);
-int canMoveBishop(Square board[8][8], int i, int j, int k, int l);
-int canMoveRook(Square board[8][8], int i, int j, int k, int l);
-int canMoveKnight(Square board[8][8], int i, int j, int k, int l);
-int canMovePawn(Square board[8][8], int i, int j, int k, int l);
+int canMoveKing(int i, int j, int k, int l);
+int canMoveQueen(int i, int j, int k, int l);
+int canMoveBishop(int i, int j, int k, int l);
+int canMoveRook(int i, int j, int k, int l);
+int canMoveKnight(int i, int j, int k, int l);
+int canMovePawn(int i, int j, int k, int l);
 void movePiece(Square board[8][8], int i, int j, int k, int l);
 
 

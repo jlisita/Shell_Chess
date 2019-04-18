@@ -6,17 +6,16 @@
 
 void game()
 {
-	Square board[8][8];
-	initializeBoard(board);
+	initializeBoard();
 
 	do
 	{
-		printfBoard(board,WHITE);
+		printfBoard(WHITE);
 		printf("Joueur blanc\n");
-		turn(WHITE,board);
-		printfBoard(board,BLACK);
+		turn(WHITE,cb.array);
+		printfBoard(BLACK);
 		printf("Joueur noire\n");
-		turn(BLACK,board);
+		turn(BLACK,cb.array);
 
 	}while(1);
 
