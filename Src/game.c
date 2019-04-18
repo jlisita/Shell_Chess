@@ -3,25 +3,40 @@
 #include <string.h>
 #include "game.h"
 
-
-void game()
+void chess()
 {
-	initializeBoard();
-
-	do
-	{
-		printfBoard(WHITE);
-		printf("Joueur blanc\n");
-		turn(WHITE,cb.array);
-		printfBoard(BLACK);
-		printf("Joueur noire\n");
-		turn(BLACK,cb.array);
-
-	}while(1);
+	Player player1;
+	Player player2;
+	initializePlayer(&player1,&player2);
+	newGame(&player1,&player2);
 
 }
 
-void turn(Color player,Square board[8][8])
+void newGame(Player* player1,Player* player2)
+{
+	int endMatch = 0;
+	Player* lastTurn = (player1->color == WHITE) ? player2 : player1;
+	initializeBoard();
+	setColor(player1,player2);
+
+	do
+	{
+		if(lastTurn == player1)
+		{
+			turn(player2);
+			lastTurn = player2;
+		}
+		else
+		{
+			turn(player1);
+			lastTurn = player1;
+		}
+
+	}while(!endMatch);
+
+}
+
+void turn(Player* player)
 {
 	int i,j,k,l;
 	char command[7]="";
@@ -30,7 +45,8 @@ void turn(Color player,Square board[8][8])
 	{
 		do
 		{
-			printf("Saisir votre deplacement:");
+			printfBoard(player->color);
+			printf("%s saisir votre deplacement:",player->name);
 			isValid = readCommand(command);
 		}while(!isValid);
 
@@ -39,10 +55,10 @@ void turn(Color player,Square board[8][8])
 		k = rankIndexToInt(command[4]);
 		l = fileIndexToInt(command[3]);
 
-		isValid = canMovePiece(player,board,i,j,k,l);
+		isValid = canMovePiece(player->color,i,j,k,l);
 
 	}while(!isValid);
-	movePiece(board,i,j,k,l);
+	movePiece(i,j,k,l);
 }
 
 void freeBuffer()

@@ -15,8 +15,8 @@ enum Name
 typedef enum Color Color;
 enum Color
 {
-	BLACK,
-	WHITE
+	WHITE,
+	BLACK
 };
 
 typedef struct Piece Piece;

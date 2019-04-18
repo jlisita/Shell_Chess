@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include "board.h"
 
-int canMovePiece(Color player,Square board[8][8], int i, int j, int k, int l)
+int canMovePiece(Color playerColor,int i, int j, int k, int l)
 {
-	if(board[i][j].isOccupied)
+	if(!isEmptySquare(i,j))
 	{
-		Piece* piece = board[i][j].piece;
+		Piece* piece = cb.array[i][j].piece;
 
-		if( getColor(i,j) == player)
+		if( getColor(i,j) == playerColor)
 		{
 			if( ( ( isEmptySquare(k,l) || ((getColor(i,j)==WHITE) &&  (getColor(k,l)==BLACK)) )
 	           || ( isEmptySquare(k,l) || ((getColor(i,j)==BLACK) &&  (getColor(k,l)==WHITE)) ) ) )
@@ -58,13 +58,13 @@ int canMovePiece(Color player,Square board[8][8], int i, int j, int k, int l)
 
 
 
-void movePiece(Square board[8][8], int i, int j, int k, int l)
+void movePiece(int i, int j, int k, int l)
 {
-	Piece* piece = board[i][j].piece;
-	board[k][l].piece = piece;
-	board[k][l].isOccupied = 1;
-	board[i][j].piece = NULL;
-	board[i][j].isOccupied = 0;
+	Piece* piece = cb.array[i][j].piece;
+	cb.array[k][l].piece = piece;
+	cb.array[k][l].isOccupied = 1;
+	cb.array[i][j].piece = NULL;
+	cb.array[i][j].isOccupied = 0;
 }
 
 int isEmptySquare(int i,int j)
