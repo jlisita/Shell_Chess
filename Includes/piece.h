@@ -24,6 +24,8 @@ struct Piece
 {
 	Color color;
 	Name name;
+	int i;
+	int j;
 };
 
 void printfPiece(Piece* piece);

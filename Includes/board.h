@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include "piece.h"
+#include "player.h"
 
 typedef struct Square Square;
 struct Square
@@ -16,14 +17,16 @@ struct ChessBoard
 	Square array[8][8];
 }cb;
 
-void initializeBoard();
+void initializeBoard(Player* player1, Player* player2);
 void printfBoard(Color player);
 int rankIndexToInt(char c);
 int fileIndexToInt(char c);
 int isEmptySquare(int i,int j);
 int isEmptyBetween(int i, int j, int k, int l);
 Color getColor(int i, int j);
-int canMovePiece(Color player, int i, int j, int k, int l);
+int testChess(Player* player);
+int testMat(Player* Player);
+int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested);
 void movePiece(int i, int j, int k, int l);
 
 

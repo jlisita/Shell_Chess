@@ -4,10 +4,11 @@
 #include "board.h"
 #include "player.h"
 
-void chess();
-void newGame(Player* player1,Player* player2);
+void game();
+void newMatch(Player* player1,Player* player2);
 void turn(Player* player);
 void freeBuffer();
 int readCommand(char* command);
+int readString(char* string);
 
 #endif

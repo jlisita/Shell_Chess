@@ -4,7 +4,7 @@
 
 int main()
 {
-	chess();
+	game();
 
 	return 0;
 }

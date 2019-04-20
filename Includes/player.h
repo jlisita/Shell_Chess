@@ -8,9 +8,12 @@ struct Player
 {
 	char name[100];
 	Color color;
+	Piece* king;
+	int isChess;
+	int isMat;
 };
 
-void initializePlayer(Player* player1, Player* player2);
-void setColor(Player* player1, Player* player2);
+void createPlayers(Player* player1, Player* player2);
+void initializePlayers(Player* player1, Player* player2);
 
 #endif

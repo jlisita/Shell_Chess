@@ -1,21 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "player.h"
+#include "game.h"
 #include <time.h>
 
-void initializePlayer(Player* player1, Player* player2)
+void createPlayers(Player* player1, Player* player2)
 {
 	printf("Player 1: Enter your name\n");
-	scanf("%s",player1->name);
+	readString(player1->name);
 	printf("Player 2: Enter your name\n");
-	scanf("%s",player2->name);
+	readString(player2->name);
+	player1->king = NULL;
+	player2->king = NULL;
 }
 
-void setColor(Player* player1, Player* player2)
+void initializePlayers(Player* player1, Player* player2)
 {
 	Color color;
 	srand(time(NULL));
 
+	player1->isChess = 0;
+	player2->isChess = 0;
+	player1->isMat = 0;
+	player2->isMat = 0;
 	color = (Color)(rand()%2);
 
 	if(color == WHITE)
@@ -28,5 +35,4 @@ void setColor(Player* player1, Player* player2)
 		player1->color = BLACK;
 		player2->color = WHITE;
 	}
-
 }
