@@ -69,7 +69,7 @@ int canMovePawn(int i, int j, int k, int l)
 	{
 		if( ( (i==6) && (j==l) && (k-i==-2) && isEmptySquare(i-1,l) && isEmptySquare(k,l) )
 		|| ( (j==l) && (k-i==-1) && isEmptySquare(k,l) )
-		|| ( (k==i-1) && ((l==j-1) || (l==j+1)) && !isEmptySquare(k,l) && (getColor(k,l)==BLACK) ) )
+		|| ( (k==i-1) && ((l==j-1) || (l==j+1)) && !isEmptySquare(k,l) && (getColor(k,l)==WHITE) ) )
 		{
 			return 1;
 		}
@@ -87,22 +87,22 @@ void printfPiece(Piece* piece)
 			switch(piece->name)
 			{
 				case KING:
-				printf("\u2654  | ");
+				printf("\u2654");
 				break;
 				case QUEEN:
-				printf("\u2655  | ");
+				printf("\u2655");
 				break;
 				case BISHOP:
-				printf("\u2657  | ");
+				printf("\u2657");
 				break;
 				case ROOK:
-				printf("\u2656  | ");
+				printf("\u2656");
 				break;
 				case KNIGHT:
-				printf("\u2658  | ");
+				printf("\u2658");
 				break;
 				case PAWN:
-				printf("\u2659  | ");
+				printf("\u2659");
 				break;
 
 			}
@@ -112,22 +112,22 @@ void printfPiece(Piece* piece)
 			switch(piece->name)
 			{
 				case KING:
-				printf("\u265A  | ");
+				printf("\u265A");
 				break;
 				case QUEEN:
-				printf("\u265B  | ");
+				printf("\u265B");
 				break;
 				case BISHOP:
-				printf("\u265D  | ");
+				printf("\u265D");
 				break;
 				case ROOK:
-				printf("\u265C  | ");
+				printf("\u265C");
 				break;
 				case KNIGHT:
-				printf("\u265E  | ");
+				printf("\u265E");
 				break;
 				case PAWN:
-				printf("\u265F  | ");
+				printf("\u265F");
 				break;
 
 			}

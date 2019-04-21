@@ -10,7 +10,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested)
 	if(!isEmptySquare(i,j))
 	{
 		Piece* piece = cb.array[i][j].piece;
-		if( getColor(i,j) == player->color || (  (getColor(i,j) != player->color)  && chessTested))
+		if( ((getColor(i,j) == player->color) && !chessTested) || ( (getColor(i,j) != player->color)  && chessTested))
 		{
 			if( ( ( isEmptySquare(k,l) || ((getColor(i,j)==WHITE) &&  (getColor(k,l)==BLACK)) )
 	           || ( isEmptySquare(k,l) || ((getColor(i,j)==BLACK) &&  (getColor(k,l)==WHITE)) ) ) )
@@ -43,7 +43,10 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested)
 					movePiece(i,j,k,l);
 					if(testChess(player))
 					{
-						printf("this move would lead to chess\n");
+						if(cb.array[k][l].piece->color != player->color)
+						{
+							printf("this move would lead to chess\n");
+						}
 						b = 0;
 					}
 					movePiece(k,l,i,j);
@@ -128,20 +131,17 @@ int testMat(Player* player)
 	{
 		for(j=0;j<8;j++)
 		{
-			if(cb.array[i][j].isOccupied)
+			if(cb.array[i][j].isOccupied && (cb.array[i][j].piece->color == color))
 			{
-				if(cb.array[i][j].piece->color == color)
+				for(k=0;k<8;k++)
 				{
-					for(k=0;k<8;k++)
+					for(l=0;l<8;l++)
 					{
-						for(l=0;l<8;l++)
+						if(!cb.array[k][l].isOccupied || (cb.array[k][l].isOccupied && cb.array[k][l].piece->color != color))
 						{
-							if(!cb.array[k][l].isOccupied || (cb.array[k][l].isOccupied && cb.array[k][l].piece->color != color))
+							if(canMovePiece(player,i,j,k,l,0))
 							{
-								if(canMovePiece(player,i,j,k,l,0))
-								{
-									return 1;
-								}
+								return 0;
 							}
 						}
 					}
@@ -149,7 +149,7 @@ int testMat(Player* player)
 			}
 		}
 	}
-	return 0;
+	return 1;
 
 }
 
@@ -233,7 +233,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 		}
 		else if(k-i<0 && l-j>0 )
 		{
-			for(n=1;n<k-i;n++)
+			for(n=1;n<abs(k-i);n++)
 			{
 				if(!isEmptySquare(i-n,j+n))
 				{
@@ -243,7 +243,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 		}
 		else if(k-i<0 && l-j<0)
 		{
-			for(n=1;n<k-i;n++)
+			for(n=1;n<abs(k-i);n++)
 			{
 				if(!isEmptySquare(i-n,j-n))
 				{
@@ -575,6 +575,7 @@ void printfBoard(Color player)
 				if(cb.array[i][j].isOccupied)
 				{
 					printfPiece(cb.array[i][j].piece);
+					printf("  | ");
 				}
 				else
 				{
@@ -602,6 +603,7 @@ void printfBoard(Color player)
 				if(cb.array[i][j].isOccupied)
 				{
 					printfPiece(cb.array[i][j].piece);
+					printf("  | ");
 				}
 				else
 				{

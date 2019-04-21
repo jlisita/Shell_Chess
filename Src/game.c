@@ -17,8 +17,7 @@ void game()
 		printf("Do you want to play again ? (1 for yes/ 0 for no)\n");
 		do
 		{
-			restart = getchar();
-			freeBuffer();
+			restart = readInt();
 			if(restart != 0 && restart != 1)
 			{
 				printf("Error: (1 for yes/ 0 for no)\n");
@@ -91,7 +90,9 @@ void turn(Player* player)
 		do
 		{
 			printfBoard(player->color);
-			printf("%s saisir votre deplacement:",player->name);
+			printf("Pieces captured: ");
+			printListPieces(player->capuredPieces);
+			printf("%s: Enter your move:",player->name);
 			isValid = readCommand(command);
 		}while(!isValid);
 
@@ -103,6 +104,7 @@ void turn(Player* player)
 		isValid = canMovePiece(player,i,j,k,l,0);
 
 	}while(!isValid);
+	updateCapturePiece(player,k,l);
 	movePiece(i,j,k,l);
 }
 
@@ -148,6 +150,20 @@ int readString(char* string)
 	else
 	{
 		freeBuffer();
+		return 0;
+	}
+}
+
+int readInt()
+{
+	char string[100]="";
+	if(fgets(string,100,stdin)!=NULL)
+	{
+		return (int) strtol(string,NULL,10);
+
+	}
+	else
+	{
 		return 0;
 	}
 }

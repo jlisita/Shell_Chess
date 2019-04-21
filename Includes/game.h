@@ -10,5 +10,6 @@ void turn(Player* player);
 void freeBuffer();
 int readCommand(char* command);
 int readString(char* string);
+int readInt();
 
 #endif
