@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "game.h"
 
 void game()
@@ -30,6 +31,7 @@ void game()
 
 void newMatch(Player* player1,Player* player2)
 {
+	char recordedMoves[1000]="";
 	int endMatch = 0;
 	Color nextTurn = WHITE;
 	Player* currentPlayer = NULL;
@@ -53,9 +55,9 @@ void newMatch(Player* player1,Player* player2)
 			nextTurn = player1->color;
 		}
 
-		turn(currentPlayer);
-		adversary->isChess = testChess(adversary);
+		turn(currentPlayer,recordedMoves);
 
+		adversary->isChess = testChess(adversary);
 		if(adversary->isChess)
 		{
 			printf("CHESS!\n");
@@ -80,7 +82,7 @@ void newMatch(Player* player1,Player* player2)
 
 }
 
-void turn(Player* player)
+void turn(Player* player, char* recordedMoves)
 {
 	int i,j,k,l;
 	char command[100]="";
@@ -90,9 +92,10 @@ void turn(Player* player)
 		do
 		{
 			printfBoard(player->color);
+			printf("%s\n",recordedMoves);
 			printf("Pieces captured: ");
 			printListPieces(player->capuredPieces);
-			printf("%s: Enter your move:",player->name);
+			printf("%s, enter your move:",player->name);
 			isValid = readCommand(command);
 		}while(!isValid);
 
@@ -104,8 +107,25 @@ void turn(Player* player)
 		isValid = canMovePiece(player,i,j,k,l,0);
 
 	}while(!isValid);
+
+    updateRecordedMoves(player,recordedMoves,command),
 	updateCapturePiece(player,k,l);
 	movePiece(i,j,k,l);
+}
+
+void updateRecordedMoves(Player* player, char* recordedMoves, char* command)
+{
+	static int indexMoves = 0;
+	if(player->color==WHITE)
+	{
+		indexMoves++;
+		char index[10]="";
+		sprintf(index,"%d. ",indexMoves);
+		strcat(recordedMoves,index);
+	}
+	char cmd[10]="";
+	sprintf(cmd,"%c%c%c%c ",tolower(command[0]),tolower(command[1]),tolower(command[3]),tolower(command[4]));
+	strcat(recordedMoves,cmd);
 }
 
 int readCommand(char* command)
