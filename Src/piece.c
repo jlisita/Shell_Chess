@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "board.h"
 
+
+// test if the king can be moved
 int canMoveKing(int i, int j, int k, int l)
 {
 	if( ( (k-i==1) &&  ( (j==l) || (l-j==1) || (l-j==-1) ) )
@@ -13,6 +15,7 @@ int canMoveKing(int i, int j, int k, int l)
 	return 0;
 }
 
+// test if the queen can be moved
 int canMoveQueen(int i, int j, int k, int l)
 {
 	if(isEmptyBetween(i,j,k,l)
@@ -23,6 +26,7 @@ int canMoveQueen(int i, int j, int k, int l)
 	return 0;
 }
 
+// test if the bishop can be moved
 int canMoveBishop(int i, int j, int k, int l)
 {
 	if(isEmptyBetween(i,j,k,l)
@@ -33,6 +37,7 @@ int canMoveBishop(int i, int j, int k, int l)
 	return 0;
 }
 
+// test if the rook can be moved
 int canMoveRook(int i, int j, int k, int l)
 {
 	if(isEmptyBetween(i,j,k,l)
@@ -43,6 +48,7 @@ int canMoveRook(int i, int j, int k, int l)
 	return 0;
 }
 
+// test if the knigth can be moved
 int canMoveKnight(int i, int j, int k, int l)
 {
 
@@ -54,6 +60,7 @@ int canMoveKnight(int i, int j, int k, int l)
      return 0;
 }
 
+// test if the pawn can be moved
 int canMovePawn(int i, int j, int k, int l)
 {
 	if(getColor(i,j) == WHITE)
@@ -79,7 +86,7 @@ int canMovePawn(int i, int j, int k, int l)
 }
 
 
-
+// print piece using unicode point in console
 void printfPiece(Piece* piece)
 {
 	if(piece->color == WHITE)
@@ -104,7 +111,6 @@ void printfPiece(Piece* piece)
 				case PAWN:
 				printf("\u2659");
 				break;
-
 			}
 		}
 		else
@@ -129,7 +135,6 @@ void printfPiece(Piece* piece)
 				case PAWN:
 				printf("\u265F");
 				break;
-
 			}
 		}
 }

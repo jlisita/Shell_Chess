@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include "board.h"
 
-// return 0
-int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested)
+// test if the piece can be moved
+int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess)
 {
 	int b = 0;
 	Piece* tempPiece = NULL;
 	if(!isEmptySquare(i,j))
 	{
 		Piece* piece = cb.array[i][j].piece;
-		if( ((getColor(i,j) == player->color) && !chessTested) || ( (getColor(i,j) != player->color)  && chessTested))
+		if( ((getColor(i,j) == player->color) && !isTestChess) || ( (getColor(i,j) != player->color)  && isTestChess))
 		{
 			if( ( ( isEmptySquare(k,l) || ((getColor(i,j)==WHITE) &&  (getColor(k,l)==BLACK)) )
 	           || ( isEmptySquare(k,l) || ((getColor(i,j)==BLACK) &&  (getColor(k,l)==WHITE)) ) ) )
@@ -37,7 +37,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested)
 						break;
 				}
 
-				if(b==1 && !chessTested)
+				if(b==1 && !isTestChess)
 				{
 					tempPiece = cb.array[k][l].piece;
 					movePiece(i,j,k,l);
@@ -76,11 +76,15 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested)
 		printf("no piece on this square\n");
 		return 0;
 	}
+	if (b==0 && !isTestChess)
+	{
+		printf("This movement is not allowed\n");
+	}
 	return b;
 }
 
 
-
+// update the board with new position of the piece
 void movePiece(int i, int j, int k, int l)
 {
 	Piece* piece = cb.array[i][j].piece;
@@ -92,6 +96,7 @@ void movePiece(int i, int j, int k, int l)
 	cb.array[i][j].isOccupied = 0;
 }
 
+// test if the king of player can be captured by the adversary
 int testChess(Player* player)
 {
 	int i,j;
@@ -123,6 +128,7 @@ int testChess(Player* player)
 	return 0;
 }
 
+// test if the king of player can be unavoidably capured by the adversary
 int testMat(Player* player)
 {
 	int i,j,k,l;
@@ -153,11 +159,13 @@ int testMat(Player* player)
 
 }
 
+// test is the square doesn't contain piece.
 int isEmptySquare(int i,int j)
 {
 	return !cb.array[i][j].isOccupied;
 }
 
+// test if all square between initial position and final position are empty
 int isEmptyBetween(int i, int j, int k, int l)
 {
 	int n,m;
@@ -211,6 +219,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 	}
 	else // diagonal move
 	{
+		// from down/left to up/right
 		if(k-i>0 && l-j>0)
 		{
 			for(n=1;n<k-i;n++)
@@ -221,6 +230,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 				}
 			}
 		}
+		// from down/right to up/left
 		else if(k-i>0 && l-j<0)
 		{
 			for(n=1;n<k-i;n++)
@@ -231,6 +241,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 				}
 			}
 		}
+		// from up/left to down/right
 		else if(k-i<0 && l-j>0 )
 		{
 			for(n=1;n<abs(k-i);n++)
@@ -241,6 +252,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 				}
 			}
 		}
+		// from up/right to down/left
 		else if(k-i<0 && l-j<0)
 		{
 			for(n=1;n<abs(k-i);n++)
@@ -260,6 +272,7 @@ Color getColor(int i, int j)
 	return cb.array[i][j].piece->color;
 }
 
+// convert rank name to array columun index
 int rankIndexToInt(char c)
 {
 	int i;
@@ -293,6 +306,7 @@ int rankIndexToInt(char c)
 	return i;
 }
 
+// convert file name to array line index
 int fileIndexToInt(char c)
 {
 	int i;
@@ -326,25 +340,11 @@ int fileIndexToInt(char c)
 	return i;
 }
 
+// initialize game pieces and place them on the board
 void initializeBoard(Player* player1, Player* player2)
 {
 	int i,j;
 
-	for(i=0;i<8;i++)
-	{
-		for(j=0;j<8;j++)
-		{
-			if(i<2 || i>5)
-			{
-				cb.array[i][j].isOccupied = 1;
-			}
-			else
-			{
-				cb.array[i][j].isOccupied = 0;
-				cb.array[i][j].piece = NULL;
-			}
-		}
-	}
 
 	Piece* whiteKing = malloc(sizeof(Piece));
 	whiteKing->color = WHITE;
@@ -386,7 +386,6 @@ void initializeBoard(Player* player1, Player* player2)
 	whiteBishop2->name = BISHOP;
 	whiteBishop2->i= 0;
 	whiteBishop2->j= 5;
-
 	Piece* whitePawn1 = malloc(sizeof(Piece));
 	whitePawn1->color = WHITE;
 	whitePawn1->name = PAWN;
@@ -468,7 +467,6 @@ void initializeBoard(Player* player1, Player* player2)
 	blackBishop2->name = BISHOP;
 	blackBishop2->i= 7;
 	blackBishop2->j= 5;
-
 	Piece* blackPawn1 = malloc(sizeof(Piece));
 	blackPawn1->color = BLACK;
 	blackPawn1->name = PAWN;
@@ -510,7 +508,22 @@ void initializeBoard(Player* player1, Player* player2)
 	blackPawn8->i= 6;
 	blackPawn8->j= 7;
 
-
+	// initialize board squares
+	for(i=0;i<8;i++)
+	{
+		for(j=0;j<8;j++)
+		{
+			if(i<2 || i>5)
+			{
+				cb.array[i][j].isOccupied = 1;
+			}
+			else
+			{
+				cb.array[i][j].isOccupied = 0;
+				cb.array[i][j].piece = NULL;
+			}
+		}
+	}
 
 	cb.array[0][0].piece = whiteRook1;
 	cb.array[0][7].piece = whiteRook2;
@@ -545,6 +558,7 @@ void initializeBoard(Player* player1, Player* player2)
 	cb.array[6][6].piece = blackPawn7;
 	cb.array[6][7].piece = blackPawn8;
 
+
 	if(player1->color == WHITE)
 	{
 		player1->king = whiteKing;
@@ -558,6 +572,7 @@ void initializeBoard(Player* player1, Player* player2)
 
 }
 
+// print board in console
 void printfBoard(Color player)
 {
 

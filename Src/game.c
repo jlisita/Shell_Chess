@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "game.h"
 
+// initialize player and launch new match
 void game()
 {
 	Player player1;
@@ -29,6 +30,7 @@ void game()
 	}while(restart);
 }
 
+// initialize board and manage player turn
 void newMatch(Player* player1,Player* player2)
 {
 	char recordedMoves[1000]="";
@@ -82,37 +84,41 @@ void newMatch(Player* player1,Player* player2)
 
 }
 
+// manage command entry and update game
 void turn(Player* player, char* recordedMoves)
 {
 	int i,j,k,l;
 	char command[100]="";
-	int isValid;
+	int validCommand=0, validMovement=0;
+
+	printfBoard(player->color);
+	printf("%s\n",recordedMoves);
+	printf("Pieces captured: ");
+	printListPieces(player->capuredPieces);
+
 	do
 	{
 		do
 		{
-			printfBoard(player->color);
-			printf("%s\n",recordedMoves);
-			printf("Pieces captured: ");
-			printListPieces(player->capuredPieces);
 			printf("%s, enter your move:",player->name);
-			isValid = readCommand(command);
-		}while(!isValid);
+			validCommand = verifyCommand(command);
+		}while(!validCommand);
 
 		i = rankIndexToInt(command[1]);
 		j = fileIndexToInt(command[0]);
 		k = rankIndexToInt(command[4]);
 		l = fileIndexToInt(command[3]);
 
-		isValid = canMovePiece(player,i,j,k,l,0);
+		validMovement = canMovePiece(player,i,j,k,l,0);
 
-	}while(!isValid);
+	}while(!validMovement);
 
     updateRecordedMoves(player,recordedMoves,command),
 	updateCapturePiece(player,k,l);
 	movePiece(i,j,k,l);
 }
 
+// update list of moves during the match
 void updateRecordedMoves(Player* player, char* recordedMoves, char* command)
 {
 	static int indexMoves = 0;
@@ -128,7 +134,9 @@ void updateRecordedMoves(Player* player, char* recordedMoves, char* command)
 	strcat(recordedMoves,cmd);
 }
 
-int readCommand(char* command)
+
+// test if command entered is valid
+int verifyCommand(char* command)
 {
 	char* rankIndex = "12345678";
 	char* fileIndex = "abcdefghABCDEFGH";
@@ -151,6 +159,7 @@ int readCommand(char* command)
 	}
 }
 
+// store string enter in console
 int readString(char* string)
 {
 	char* posCR = NULL;
@@ -174,6 +183,7 @@ int readString(char* string)
 	}
 }
 
+// store integer entered in console
 int readInt()
 {
 	char string[100]="";
@@ -188,6 +198,7 @@ int readInt()
 	}
 }
 
+// remove data from stdin buffer
 void freeBuffer()
 {
 	int c = 0;
