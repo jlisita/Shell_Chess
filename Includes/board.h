@@ -26,7 +26,7 @@ int isEmptyBetween(int i, int j, int k, int l);
 Color getColor(int i, int j);
 int testChess(Player* player);
 int testMat(Player* Player);
-int canMovePiece(Player* player, int i, int j, int k, int l, int testChess);
+int canMovePiece(Player* player, int i, int j, int k, int l, int testChess, int isTestMat);
 void movePiece(int i, int j, int k, int l);
 
 

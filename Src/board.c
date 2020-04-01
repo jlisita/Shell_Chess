@@ -3,7 +3,7 @@
 #include "board.h"
 
 // test if the piece can be moved
-int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess)
+int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, int isTestMat)
 {
 	int b = 0;
 	Piece* tempPiece = NULL;
@@ -76,7 +76,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess)
 		printf("no piece on this square\n");
 		return 0;
 	}
-	if (b==0 && !isTestChess)
+	if (b==0 && !isTestChess && !isTestMat)
 	{
 		printf("This movement is not allowed\n");
 	}
@@ -117,7 +117,7 @@ int testChess(Player* player)
 			{
 				if(cb.array[i][j].piece->color == color2)
 				{
-					if(canMovePiece(player,i,j,player->king->i,player->king->j,1))
+					if(canMovePiece(player,i,j,player->king->i,player->king->j,1,0))
 					{
 						return 1;
 					}
@@ -145,7 +145,7 @@ int testMat(Player* player)
 					{
 						if(!cb.array[k][l].isOccupied || (cb.array[k][l].isOccupied && cb.array[k][l].piece->color != color))
 						{
-							if(canMovePiece(player,i,j,k,l,0))
+							if(canMovePiece(player,i,j,k,l,0,1))
 							{
 								return 0;
 							}

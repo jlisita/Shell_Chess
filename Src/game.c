@@ -109,7 +109,7 @@ void turn(Player* player, char* recordedMoves)
 		k = rankIndexToInt(command[4]);
 		l = fileIndexToInt(command[3]);
 
-		validMovement = canMovePiece(player,i,j,k,l,0);
+		validMovement = canMovePiece(player,i,j,k,l,0,0);
 
 	}while(!validMovement);
 
