@@ -5,21 +5,27 @@
 #include "game.h"
 
 // initialize player and launch new match
-void game()
+int game()
 {
+	int restart = 0;
 	Player player1;
 	Player player2;
 	createPlayers(&player1,&player2);
-	int restart = 0;
 
 	do
 	{
-		newMatch(&player1,&player2);
+		if(newMatch(&player1,&player2)==-1)
+		{
+			return -1;
+		}
 
 		printf("Do you want to play again ? (1 for yes/ 0 for no)\n");
 		do
 		{
-			restart = readInt();
+			if(readInt(&restart) == -1)
+			{
+				return -1;
+			}
 			if(restart != 0 && restart != 1)
 			{
 				printf("Error: (1 for yes/ 0 for no)\n");
@@ -28,10 +34,11 @@ void game()
 		}while(restart != 0 && restart != 1);
 
 	}while(restart);
+	return 0;
 }
 
 // initialize board and manage player turn
-void newMatch(Player* player1,Player* player2)
+int newMatch(Player* player1,Player* player2)
 {
 	char recordedMoves[1000]="";
 	int endMatch = 0;
@@ -39,8 +46,14 @@ void newMatch(Player* player1,Player* player2)
 	Player* currentPlayer = NULL;
 	Player* adversary = NULL;
 
-	initializePlayers(player1,player2);
-	initializeBoard(player1,player2);
+	if(initializePlayers(player1,player2)==-1)
+	{
+		return -1;
+	}
+	if(initializeBoard(player1,player2)==-1)
+	{
+		return -1;
+	}
 
 	do
 	{
@@ -57,13 +70,24 @@ void newMatch(Player* player1,Player* player2)
 			nextTurn = player1->color;
 		}
 
-		turn(currentPlayer,recordedMoves);
+		if(turn(currentPlayer,recordedMoves)==-1)
+		{
+			return -1;
+		}
 
 		adversary->isChess = testChess(adversary);
+		if(adversary->isChess == -1)
+		{
+			return -1;
+		}
 		if(adversary->isChess)
 		{
 			printf("CHESS!\n");
 			adversary->isMat = testMat(adversary);
+			if(adversary->isChess == -1)
+			{
+				return -1;
+			}
 		}
 		if(adversary->isMat)
 		{
@@ -81,14 +105,14 @@ void newMatch(Player* player1,Player* player2)
 	{
 		printf("%s has won by Mat.\n",player1->name);
 	}
-
+	return 0;
 }
 
 // manage command entry and update game
-void turn(Player* player, char* recordedMoves)
+int turn(Player* player, char* recordedMoves)
 {
 	int i,j,k,l;
-	char command[100]="";
+	char command[10]="";
 	int validCommand=0, validMovement=0;
 
 	printfBoard(player->color);
@@ -102,7 +126,11 @@ void turn(Player* player, char* recordedMoves)
 		{
 			printf("%s, enter your move:",player->name);
 			validCommand = verifyCommand(command);
-		}while(!validCommand);
+			if(validCommand == -1)
+			{
+				return -1;
+			}
+		}while(validCommand!=1);
 
 		i = rankIndexToInt(command[1]);
 		j = fileIndexToInt(command[0]);
@@ -113,9 +141,13 @@ void turn(Player* player, char* recordedMoves)
 
 	}while(!validMovement);
 
-    updateRecordedMoves(player,recordedMoves,command),
-	updateCapturePiece(player,k,l);
+    updateRecordedMoves(player,recordedMoves,command);
+	if(updateCapturePiece(player,k,l)==-1)
+	{
+		return -1;
+	}
 	movePiece(i,j,k,l);
+	return 0;
 }
 
 // update list of moves during the match
@@ -140,30 +172,27 @@ int verifyCommand(char* command)
 {
 	char* rankIndex = "12345678";
 	char* fileIndex = "abcdefghABCDEFGH";
-	if(readString(command)!=0)
+	if(readString(command,MAXCOMMANDSIZE)==-1)
 	{
-		if(strchr(fileIndex, command[0]) != NULL && strchr(rankIndex, command[1])!=NULL && command[2]==' '
-			&& strchr(fileIndex, command[3])!=NULL && strchr(rankIndex, command[4])!=NULL)
-		{
-			return 1;
-		}
-		else
-		{
-			printf("Commande invalide\n");
-			return 0;
-		}
+		return -1;
+	}
+	if(strchr(fileIndex, command[0]) != NULL && strchr(rankIndex, command[1])!=NULL && command[2]==' '
+		&& strchr(fileIndex, command[3])!=NULL && strchr(rankIndex, command[4])!=NULL)
+	{
+		return 1;
 	}
 	else
 	{
+		printf("Commande invalide\n");
 		return 0;
 	}
 }
 
 // store string enter in console
-int readString(char* string)
+int readString(char* string, int sizeMax)
 {
 	char* posCR = NULL;
-	if(fgets(string,100,stdin)!=NULL)
+	if(fgets(string,sizeMax,stdin)!=NULL)
 	{
 		posCR = strchr(string,'\n');
 		if(posCR != NULL )
@@ -174,27 +203,27 @@ int readString(char* string)
 		{
 			freeBuffer();
 		}
-		return 1;
+		return 0;
 	}
 	else
 	{
 		freeBuffer();
-		return 0;
+		return -1;
 	}
 }
 
 // store integer entered in console
-int readInt()
+int readInt(int* nbr )
 {
 	char string[100]="";
 	if(fgets(string,100,stdin)!=NULL)
 	{
-		return (int) strtol(string,NULL,10);
-
+		*nbr = (int) strtol(string,NULL,10);
+		return 0;
 	}
 	else
 	{
-		return 0;
+		return -1;
 	}
 }
 

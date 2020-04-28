@@ -3,6 +3,8 @@
 
 #include "piece.h"
 
+#define SIZENAME 100
+
 typedef struct Element Element;
 struct Element
 {
@@ -20,7 +22,7 @@ struct ListPieces
 typedef struct Player Player;
 struct Player
 {
-	char name[100];
+	char name[SIZENAME];
 	Color color;
 	Piece* king;
 	int isChess;
@@ -30,10 +32,10 @@ struct Player
 
 
 void createPlayers(Player* player1, Player* player2);
-void initializePlayers(Player* player1, Player* player2);
-void updateCapturePiece(Player* player,int k,int l);
+int initializePlayers(Player* player1, Player* player2);
+int updateCapturePiece(Player* player,int k,int l);
 ListPieces* createListPiece();
-void addPiece(ListPieces* list, Piece* piece);
+int addPiece(ListPieces* list, Piece* piece);
 void printListPieces(ListPieces* list);
 
 #endif
