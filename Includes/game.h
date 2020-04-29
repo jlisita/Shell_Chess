@@ -4,12 +4,15 @@
 #include "board.h"
 #include "player.h"
 
-void game();
-void newMatch(Player* player1,Player* player2);
-void turn(Player* player);
-void freeBuffer();
-int readCommand(char* command);
-int readString(char* string);
+#define MAXCOMMANDSIZE 10
+
+int game();
+int newMatch(Player* player1,Player* player2);
+int turn(Player* player, char* recordedMoves);
+void updateRecordedMoves(Player* player, char* recordedMoves, char* command);
+int verifyCommand(char* command);
+int readString(char* string, int sizeMax);
 int readInt();
+void freeBuffer();
 
 #endif

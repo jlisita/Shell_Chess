@@ -7,14 +7,14 @@
 void createPlayers(Player* player1, Player* player2)
 {
 	printf("Player 1: Enter your name\n");
-	readString(player1->name);
+	readString(player1->name,SIZENAME);
 	printf("Player 2: Enter your name\n");
-	readString(player2->name);
+	readString(player2->name,SIZENAME);
 	player1->king = NULL;
 	player2->king = NULL;
 }
 
-void initializePlayers(Player* player1, Player* player2)
+int initializePlayers(Player* player1, Player* player2)
 {
 	Color color;
 	srand(time(NULL));
@@ -25,6 +25,10 @@ void initializePlayers(Player* player1, Player* player2)
 	player2->isMat = 0;
 	player1->capuredPieces = createListPiece();
 	player2->capuredPieces = createListPiece();
+	if(player1->capuredPieces == NULL || player2->capuredPieces == NULL )
+	{
+		return -1;
+	}
 	color = (Color)(rand()%2);
 
 	if(color == WHITE)
@@ -37,15 +41,19 @@ void initializePlayers(Player* player1, Player* player2)
 		player1->color = BLACK;
 		player2->color = WHITE;
 	}
+	return 0;
 }
 
-void updateCapturePiece(Player* player,int k,int l)
+int updateCapturePiece(Player* player,int k,int l)
 {
 	if(cb.array[k][l].isOccupied)
 	{
-		addPiece(player->capuredPieces, cb.array[k][l].piece);
+		if(addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
+		{
+			return -1;
+		}
 	}
-
+	return 0;
 }
 
 ListPieces* createListPiece()
@@ -53,7 +61,7 @@ ListPieces* createListPiece()
 	ListPieces* newList = malloc(sizeof(ListPieces));
 	if (newList==NULL)
 	{
-		exit(EXIT_FAILURE);
+		return NULL;
 	}
 	newList->first=NULL;
 	newList->size=0;
@@ -61,13 +69,13 @@ ListPieces* createListPiece()
 	return newList;
 }
 
-void addPiece(ListPieces* list, Piece* piece)
+int addPiece(ListPieces* list, Piece* piece)
 {
 	Element* newElement = malloc(sizeof(Element));
 	Element* ptrEl= NULL;
 	if(newElement==NULL || list==NULL || piece==NULL)
 	{
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	newElement->value=piece;
 	newElement->next=NULL;
@@ -88,6 +96,7 @@ void addPiece(ListPieces* list, Piece* piece)
 		ptrEl->next=newElement;
 	}
 	list->size++;
+	return 0;
 }
 
 void printListPieces(ListPieces* list)

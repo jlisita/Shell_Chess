@@ -2,87 +2,106 @@
 #include <stdlib.h>
 #include "board.h"
 
-// return 0
-int canMovePiece(Player* player, int i, int j, int k, int l, int chessTested)
+// test if the piece can be moved
+int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, int isTestMat)
 {
-	int b = 0;
-	Piece* tempPiece = NULL;
-	if(!isEmptySquare(i,j))
+	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
 	{
-		Piece* piece = cb.array[i][j].piece;
-		if( ((getColor(i,j) == player->color) && !chessTested) || ( (getColor(i,j) != player->color)  && chessTested))
+		return -1;
+	}
+	int allowedMovement = 0, avoidChess = 0;
+	Piece* tempPiece = NULL;
+	if(isEmptySquare(i,j))
+	{
+		printf("No piece on this square\n");
+		return 0;
+	}
+
+	Piece* piece = cb.array[i][j].piece;
+	if( ((getColor(i,j) != player->color) && !isTestChess) || ( (getColor(i,j) == player->color)  && isTestChess))
+	{
+		printf("Can't move this piece\n");
+		return 0;
+	}
+
+	if( (!isEmptySquare(k,l) && getColor(i,j) == WHITE && getColor(k,l) == WHITE)
+		|| (!isEmptySquare(k,l) && getColor(i,j) == BLACK && getColor(k,l) == BLACK) )
+	{
+		printf("Can't eat your own piece\n");
+		return 0;
+	}
+
+	switch(piece->name)
+	{
+		case KING:
+			allowedMovement = canMoveKing(i,j,k,l);
+			break;
+		case QUEEN:
+			allowedMovement = canMoveQueen(i,j,k,l);
+			break;
+		case BISHOP:
+			allowedMovement = canMoveBishop(i,j,k,l);
+			break;
+		case ROOK:
+			allowedMovement = canMoveRook(i,j,k,l);
+			break;
+		case KNIGHT:
+			allowedMovement = canMoveKnight(i,j,k,l);
+			break;
+		case PAWN:
+			allowedMovement = canMovePawn(i,j,k,l);
+			break;
+	}
+
+	if(allowedMovement==0)
+	{
+		if(!isTestChess && !isTestMat)
 		{
-			if( ( ( isEmptySquare(k,l) || ((getColor(i,j)==WHITE) &&  (getColor(k,l)==BLACK)) )
-	           || ( isEmptySquare(k,l) || ((getColor(i,j)==BLACK) &&  (getColor(k,l)==WHITE)) ) ) )
-			{
-				switch(piece->name)
-				{
-					case KING:
-						b = canMoveKing(i,j,k,l);
-						break;
-					case QUEEN:
-						b = canMoveQueen(i,j,k,l);
-						break;
-					case BISHOP:
-						b = canMoveBishop(i,j,k,l);
-						break;
-					case ROOK:
-						b = canMoveRook(i,j,k,l);
-						break;
-					case KNIGHT:
-						b = canMoveKnight(i,j,k,l);
-						break;
-					case PAWN:
-						b = canMovePawn(i,j,k,l);
-						break;
-				}
-
-				if(b==1 && !chessTested)
-				{
-					tempPiece = cb.array[k][l].piece;
-					movePiece(i,j,k,l);
-					if(testChess(player))
-					{
-						if(cb.array[k][l].piece->color != player->color)
-						{
-							printf("this move would lead to chess\n");
-						}
-						b = 0;
-					}
-					movePiece(k,l,i,j);
-					if(tempPiece!=NULL)
-					{
-						cb.array[k][l].piece = tempPiece;
-						cb.array[k][l].isOccupied = 1;
-					}
-				}
-			}
-			else
-			{
-				printf("can't eat your own piece\n");
-				return 0;
-			}
-
+			printf("This movement is not allowed\n");
+		}
+		return 0;
+	}
+	else if(!isTestChess)
+	{
+		int ret;
+		tempPiece = cb.array[k][l].piece;
+		movePiece(i,j,k,l);
+		ret = testChess(player);
+		if(ret == -1)
+		{
+			return -1;
 		}
 		else
 		{
-			printf("can't move this piece\n");
-			return 0;
+			avoidChess = !ret;
+		}
+		if(!avoidChess && !isTestMat)
+		{
+			printf("This move would lead to chess\n");
 		}
 
+		movePiece(k,l,i,j);
+		if(tempPiece!=NULL)
+		{
+			cb.array[k][l].piece = tempPiece;
+			cb.array[k][l].isOccupied = 1;
+		}
+		return avoidChess;
 	}
 	else
 	{
-		printf("no piece on this square\n");
-		return 0;
+		return 1;
 	}
-	return b;
 }
 
 
-
-void movePiece(int i, int j, int k, int l)
+// update the board with new position of the piece
+int movePiece(int i, int j, int k, int l)
 {
+	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
+	{
+		return -1;
+	}
 	Piece* piece = cb.array[i][j].piece;
 	cb.array[k][l].piece = piece;
 	cb.array[k][l].piece->i=k;
@@ -90,11 +109,13 @@ void movePiece(int i, int j, int k, int l)
 	cb.array[k][l].isOccupied = 1;
 	cb.array[i][j].piece = NULL;
 	cb.array[i][j].isOccupied = 0;
+	return 0;
 }
 
+// test if the king of player can be captured by the adversary
 int testChess(Player* player)
 {
-	int i,j;
+	int i,j,ret;
 	Color color2;
 	if(player->color == WHITE)
 	{
@@ -108,14 +129,16 @@ int testChess(Player* player)
 	{
 		for(j=0;j<8;j++)
 		{
-			if(cb.array[i][j].isOccupied)
+			if(cb.array[i][j].isOccupied && cb.array[i][j].piece->color == color2
+				&& (ret=canMovePiece(player,i,j,player->king->i,player->king->j,1,0)))
 			{
-				if(cb.array[i][j].piece->color == color2)
+				if(ret==-1)
 				{
-					if(canMovePiece(player,i,j,player->king->i,player->king->j,1))
-					{
-						return 1;
-					}
+					return -1;
+				}
+				else
+				{
+					return 1;
 				}
 			}
 		}
@@ -123,9 +146,10 @@ int testChess(Player* player)
 	return 0;
 }
 
+// test if the king of player can be unavoidably capured by the adversary
 int testMat(Player* player)
 {
-	int i,j,k,l;
+	int i,j,k,l,ret;
 	Color color = player->color;
 	for(i=0;i<8;i++)
 	{
@@ -137,30 +161,46 @@ int testMat(Player* player)
 				{
 					for(l=0;l<8;l++)
 					{
-						if(!cb.array[k][l].isOccupied || (cb.array[k][l].isOccupied && cb.array[k][l].piece->color != color))
+						if((!cb.array[k][l].isOccupied
+							|| (cb.array[k][l].isOccupied && cb.array[k][l].piece->color != color))
+							&& (ret=canMovePiece(player,i,j,k,l,0,1)))
 						{
-							if(canMovePiece(player,i,j,k,l,0))
+							if(ret==-1)
+							{
+								return-1;
+							}
+							else
 							{
 								return 0;
 							}
 						}
+
 					}
 				}
 			}
 		}
 	}
 	return 1;
-
 }
 
+// test is the square doesn't contain piece.
 int isEmptySquare(int i,int j)
 {
+	if( i < 0|| j < 0 || i > 7 || j > 7 )
+	{
+		return -1;
+	}
 	return !cb.array[i][j].isOccupied;
 }
 
+// test if all square between initial position and final position are empty
 int isEmptyBetween(int i, int j, int k, int l)
 {
 	int n,m;
+	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
+	{
+		return -1;
+	}
 	if(k-i==0) // horizontal move
 	{
 		if(l-j>0) // from left to right
@@ -211,6 +251,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 	}
 	else // diagonal move
 	{
+		// from down/left to up/right
 		if(k-i>0 && l-j>0)
 		{
 			for(n=1;n<k-i;n++)
@@ -221,6 +262,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 				}
 			}
 		}
+		// from down/right to up/left
 		else if(k-i>0 && l-j<0)
 		{
 			for(n=1;n<k-i;n++)
@@ -231,6 +273,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 				}
 			}
 		}
+		// from up/left to down/right
 		else if(k-i<0 && l-j>0 )
 		{
 			for(n=1;n<abs(k-i);n++)
@@ -241,6 +284,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 				}
 			}
 		}
+		// from up/right to down/left
 		else if(k-i<0 && l-j<0)
 		{
 			for(n=1;n<abs(k-i);n++)
@@ -257,9 +301,14 @@ int isEmptyBetween(int i, int j, int k, int l)
 
 Color getColor(int i, int j)
 {
+	if( i < 0|| j < 0 || i > 7 || j > 7 )
+	{
+		return -1;
+	}
 	return cb.array[i][j].piece->color;
 }
 
+// convert rank name to array columun index
 int rankIndexToInt(char c)
 {
 	int i;
@@ -289,10 +338,13 @@ int rankIndexToInt(char c)
 		case '8':
 			i=7;
 			break;
+		default:
+			i = -1;
 	}
 	return i;
 }
 
+// convert file name to array line index
 int fileIndexToInt(char c)
 {
 	int i;
@@ -322,14 +374,87 @@ int fileIndexToInt(char c)
 		case 'h': case 'H':
 			i=7;
 			break;
+		default:
+			i = -1;
 	}
 	return i;
 }
 
-void initializeBoard(Player* player1, Player* player2)
+// initialize game pieces and place them on the board
+int initializeBoard(Player* player1, Player* player2)
 {
 	int i,j;
 
+	Piece *whitePieces[16];
+	Piece *blackPieces[16];
+
+	for(i=0;i<16;i++)
+	{
+		whitePieces[i] = NULL;
+		blackPieces[i] = NULL;
+	}
+
+	// allocate memory for pieces
+	for(i=0;i<16;i++)
+	{
+		whitePieces[i] = malloc(sizeof(Piece));
+		blackPieces[i] = malloc(sizeof(Piece));
+		if(whitePieces[i] == NULL)
+		{
+			goto error;
+		}
+	}
+
+	// initialize pieces
+	for(i=0;i<16;i++)
+	{
+		whitePieces[i]->color = WHITE;
+		blackPieces[i]->color = BLACK;
+	}
+
+	whitePieces[0]->name = ROOK;
+	whitePieces[1]->name = KNIGHT;
+	whitePieces[2]->name = BISHOP;
+	whitePieces[3]->name = QUEEN;
+	whitePieces[4]->name = KING;
+	whitePieces[5]->name = BISHOP;
+	whitePieces[6]->name = KNIGHT;
+	whitePieces[7]->name = ROOK;
+
+	blackPieces[0]->name = ROOK;
+	blackPieces[1]->name = KNIGHT;
+	blackPieces[2]->name = BISHOP;
+	blackPieces[3]->name = QUEEN;
+	blackPieces[4]->name = KING;
+	blackPieces[5]->name = BISHOP;
+	blackPieces[6]->name = KNIGHT;
+	blackPieces[7]->name = ROOK;
+
+	for(i=8;i<16;i++)
+	{
+		whitePieces[i]->name = PAWN;
+		blackPieces[i]->name = PAWN;
+	}
+
+	for(i=0;i<8;i++)
+	{
+		whitePieces[i]->i = 0;
+		whitePieces[i]->j = i;
+
+		blackPieces[i]->i = 7;
+		blackPieces[i]->j = i;
+	}
+
+	for(i=8;i<16;i++)
+	{
+		whitePieces[i]->i = 1;
+		whitePieces[i]->j = i - 8;
+
+		whitePieces[i]->i = 6;
+		whitePieces[i]->j = i - 8;
+	}
+
+	// initialize board squares
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<8;j++)
@@ -346,218 +471,47 @@ void initializeBoard(Player* player1, Player* player2)
 		}
 	}
 
-	Piece* whiteKing = malloc(sizeof(Piece));
-	whiteKing->color = WHITE;
-	whiteKing->name = KING;
-	whiteKing->i= 0;
-	whiteKing->j= 4;
-	Piece* whiteQueen = malloc(sizeof(Piece));
-	whiteQueen->color = WHITE;
-	whiteQueen->name = QUEEN;
-	whiteQueen->i= 0;
-	whiteQueen->j= 3;
-	Piece* whiteRook1 = malloc(sizeof(Piece));
-	whiteRook1->color = WHITE;
-	whiteRook1->name = ROOK;
-	whiteRook1->i= 0;
-	whiteRook1->j= 0;
-	Piece* whiteRook2 = malloc(sizeof(Piece));
-	whiteRook2->color = WHITE;
-	whiteRook2->name = ROOK;
-	whiteRook2->i= 0;
-	whiteRook2->j= 7;
-	Piece* whiteKnight1 = malloc(sizeof(Piece));
-	whiteKnight1->color = WHITE;
-	whiteKnight1->name = KNIGHT;
-	whiteKnight1->i= 0;
-	whiteKnight1->j= 1;
-	Piece* whiteKnight2 = malloc(sizeof(Piece));
-	whiteKnight2->color = WHITE;
-	whiteKnight2->name = KNIGHT;
-	whiteKnight2->i= 0;
-	whiteKnight2->j= 6;
-	Piece* whiteBishop1 = malloc(sizeof(Piece));
-	whiteBishop1->color = WHITE;
-	whiteBishop1->name = BISHOP;
-	whiteBishop1->i= 0;
-	whiteBishop1->j= 2;
-	Piece* whiteBishop2 = malloc(sizeof(Piece));
-	whiteBishop2->color = WHITE;
-	whiteBishop2->name = BISHOP;
-	whiteBishop2->i= 0;
-	whiteBishop2->j= 5;
+	// place pieces on the board
+	for(i=0;i<8;i++)
+	{
+		cb.array[0][i].piece = whitePieces[i];
+		cb.array[7][i].piece = blackPieces[i];
 
-	Piece* whitePawn1 = malloc(sizeof(Piece));
-	whitePawn1->color = WHITE;
-	whitePawn1->name = PAWN;
-	whitePawn1->i= 1;
-	whitePawn1->j= 0;
-	Piece* whitePawn2 = malloc(sizeof(Piece));
-	whitePawn2->color = WHITE;
-	whitePawn2->name = PAWN;
-	whitePawn2->i= 1;
-	whitePawn2->j= 1;
-	Piece* whitePawn3 = malloc(sizeof(Piece));
-	whitePawn3->color = WHITE;
-	whitePawn3->name = PAWN;
-	whitePawn3->i= 1;
-	whitePawn3->j= 2;
-	Piece* whitePawn4 = malloc(sizeof(Piece));
-	whitePawn4->color = WHITE;
-	whitePawn4->name = PAWN;
-	whitePawn4->i= 1;
-	whitePawn4->j= 3;
-	Piece* whitePawn5 = malloc(sizeof(Piece));
-	whitePawn5->color = WHITE;
-	whitePawn5->name = PAWN;
-	whitePawn5->i= 1;
-	whitePawn5->j= 4;
-	Piece* whitePawn6 = malloc(sizeof(Piece));
-	whitePawn6->color = WHITE;
-	whitePawn6->name = PAWN;
-	whitePawn6->i= 1;
-	whitePawn6->j= 5;
-	Piece* whitePawn7 = malloc(sizeof(Piece));
-	whitePawn7->color = WHITE;
-	whitePawn7->name = PAWN;
-	whitePawn7->i= 1;
-	whitePawn7->j= 6;
-	Piece* whitePawn8 = malloc(sizeof(Piece));
-	whitePawn8->color = WHITE;
-	whitePawn8->name = PAWN;
-	whitePawn8->i= 1;
-	whitePawn8->j= 7;
+	}
 
-	Piece* blackKing = malloc(sizeof(Piece));
-	blackKing->color = BLACK;
-	blackKing->name = KING;
-	blackKing->i= 7;
-	blackKing->j= 4;
-	Piece* blackQueen = malloc(sizeof(Piece));
-	blackQueen->color = BLACK;
-	blackQueen->name = QUEEN;
-	blackQueen->i= 7;
-	blackQueen->j= 3;
-	Piece* blackRook1 = malloc(sizeof(Piece));
-	blackRook1->color = BLACK;
-	blackRook1->name = ROOK;
-	blackRook1->i= 7;
-	blackRook1->j= 0;
-	Piece* blackRook2 = malloc(sizeof(Piece));
-	blackRook2->color = BLACK;
-	blackRook2->name = ROOK;
-	blackRook2->i= 7;
-	blackRook2->j= 7;
-	Piece* blackKnight1 = malloc(sizeof(Piece));
-	blackKnight1->color = BLACK;
-	blackKnight1->name = KNIGHT;
-	blackKnight1->i= 7;
-	blackKnight1->j= 1;
-	Piece* blackKnight2 = malloc(sizeof(Piece));
-	blackKnight2->color = BLACK;
-	blackKnight2->name = KNIGHT;
-	blackKnight2->i= 7;
-	blackKnight2->j= 6;
-	Piece* blackBishop1 = malloc(sizeof(Piece));
-	blackBishop1->color = BLACK;
-	blackBishop1->name = BISHOP;
-	blackBishop1->i= 7;
-	blackBishop1->j= 2;
-	Piece* blackBishop2 = malloc(sizeof(Piece));
-	blackBishop2->color = BLACK;
-	blackBishop2->name = BISHOP;
-	blackBishop2->i= 7;
-	blackBishop2->j= 5;
-
-	Piece* blackPawn1 = malloc(sizeof(Piece));
-	blackPawn1->color = BLACK;
-	blackPawn1->name = PAWN;
-	blackPawn1->i= 6;
-	blackPawn1->j= 0;
-	Piece* blackPawn2 = malloc(sizeof(Piece));
-	blackPawn2->color = BLACK;
-	blackPawn2->name = PAWN;
-	blackPawn2->i= 6;
-	blackPawn2->j= 1;
-	Piece* blackPawn3 = malloc(sizeof(Piece));
-	blackPawn3->color = BLACK;
-	blackPawn3->name = PAWN;
-	blackPawn3->i= 6;
-	blackPawn3->j= 2;
-	Piece* blackPawn4 = malloc(sizeof(Piece));
-	blackPawn4->color = BLACK;
-	blackPawn4->name = PAWN;
-	blackPawn4->i= 6;
-	blackPawn4->j= 3;
-	Piece* blackPawn5 = malloc(sizeof(Piece));
-	blackPawn5->color = BLACK;
-	blackPawn5->name = PAWN;
-	blackPawn5->i= 6;
-	blackPawn5->j= 4;
-	Piece* blackPawn6 = malloc(sizeof(Piece));
-	blackPawn6->color = BLACK;
-	blackPawn6->name = PAWN;
-	blackPawn6->i= 6;
-	blackPawn6->j= 5;
-	Piece* blackPawn7 = malloc(sizeof(Piece));
-	blackPawn7->color = BLACK;
-	blackPawn7->name = PAWN;
-	blackPawn7->i= 6;
-	blackPawn7->j= 6;
-	Piece* blackPawn8 = malloc(sizeof(Piece));
-	blackPawn8->color = BLACK;
-	blackPawn8->name = PAWN;
-	blackPawn8->i= 6;
-	blackPawn8->j= 7;
-
-
-
-	cb.array[0][0].piece = whiteRook1;
-	cb.array[0][7].piece = whiteRook2;
-	cb.array[7][0].piece = blackRook1;
-	cb.array[7][7].piece = blackRook2;
-	cb.array[0][1].piece = whiteKnight1;
-	cb.array[0][6].piece = whiteKnight2;
-	cb.array[7][1].piece = blackKnight1;
-	cb.array[7][6].piece = blackKnight2;
-	cb.array[0][2].piece = whiteBishop1;
-	cb.array[0][5].piece = whiteBishop2;
-	cb.array[7][2].piece = blackBishop1;
-	cb.array[7][5].piece = blackBishop2;
-	cb.array[0][3].piece = whiteQueen;
-	cb.array[7][3].piece = blackQueen;
-	cb.array[0][4].piece = whiteKing;
-	cb.array[7][4].piece = blackKing;
-	cb.array[1][0].piece = whitePawn1;
-	cb.array[1][1].piece = whitePawn2;
-	cb.array[1][2].piece = whitePawn3;
-	cb.array[1][3].piece = whitePawn4;
-	cb.array[1][4].piece = whitePawn5;
-	cb.array[1][5].piece = whitePawn6;
-	cb.array[1][6].piece = whitePawn7;
-	cb.array[1][7].piece = whitePawn8;
-	cb.array[6][0].piece = blackPawn1;
-	cb.array[6][1].piece = blackPawn2;
-	cb.array[6][2].piece = blackPawn3;
-	cb.array[6][3].piece = blackPawn4;
-	cb.array[6][4].piece = blackPawn5;
-	cb.array[6][5].piece = blackPawn6;
-	cb.array[6][6].piece = blackPawn7;
-	cb.array[6][7].piece = blackPawn8;
+	for(i=8;i<16;i++)
+	{
+		cb.array[1][i - 8].piece = whitePieces[i];
+		cb.array[6][i - 8].piece = blackPieces[i];
+	}
 
 	if(player1->color == WHITE)
 	{
-		player1->king = whiteKing;
-		player2->king = blackKing;
+		player1->king = whitePieces[4];
+		player2->king = blackPieces[4];
 	}
 	else
 	{
-		player1->king = blackKing;
-		player2->king = whiteKing;
+		player1->king = blackPieces[4];
+		player2->king = whitePieces[4];
 	}
 
+
+	return 0;
+
+	error:
+
+	for(i=0;i<16;i++)
+	{
+		free(whitePieces[i]);
+		free(blackPieces[i]);
+	}
+
+	return -1;
 }
 
+
+// print board in console
 void printfBoard(Color player)
 {
 
