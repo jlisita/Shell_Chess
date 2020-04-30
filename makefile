@@ -20,6 +20,8 @@ $(SRCDIR)/board.o: $(HEADDIR)/piece.h
 
 $(SRCDIR)/player.o: $(HEADDIR)/piece.h
 
+$(SRCDIR)/profil.o: $(HEADDIR)/game.h
+
 $(SRCDIR)/%.o: $(SRCDIR)/%.c $(HEADDIR)/%.h
 	$(CC) -o $@ -c $< $(CFLAGS)
 
