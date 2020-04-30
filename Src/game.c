@@ -3,22 +3,51 @@
 #include <string.h>
 #include <ctype.h>
 #include "game.h"
+#include "profil.h"
 
-// initialize player and launch new match
-int game()
+
+int menuMode(int* mode)
 {
-	int restart = 0;
-	Player player1;
-	Player player2;
-	createPlayers(&player1,&player2);
-
+	printf("Select mode:\n");
+	printf("1. Local\n");
+	printf("2. Network\n");
 	do
 	{
-		if(newMatch(&player1,&player2)==-1)
+		if(readInt(mode)==-1)
 		{
 			return -1;
 		}
+		if(*mode != 1 && *mode != 2)
+		{
+			printf("Invalid number: enter 1 or 2");
+		}
 
+	}while(*mode !=1 && *mode != 2);
+	return 0;
+}
+
+int game()
+{
+	int restart = 0;
+	int mode = 0;
+
+	do
+	{
+		if(menuMode(&mode)==-1)
+		{
+			return -1;
+		}
+		if(mode == 1)
+		{
+			if(newMatch(NULL)==-1)
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			printf("This mode is going to be achieved\n");
+		}
 		printf("Do you want to play again ? (1 for yes/ 0 for no)\n");
 		do
 		{
@@ -30,7 +59,6 @@ int game()
 			{
 				printf("Error: (1 for yes/ 0 for no)\n");
 			}
-
 		}while(restart != 0 && restart != 1);
 
 	}while(restart);
@@ -38,15 +66,22 @@ int game()
 }
 
 // initialize board and manage player turn
-int newMatch(Player* player1,Player* player2)
+int newMatch(Profil* profil)
 {
+	(void) profil;
+	Player* player1 = malloc(sizeof(Player));
+	Player* player2 = malloc(sizeof(Player));
 	char recordedMoves[1000]="";
 	int endMatch = 0;
-	Color nextTurn = WHITE;
+	Color nextTurn;
 	Player* currentPlayer = NULL;
 	Player* adversary = NULL;
 
-	if(initializePlayers(player1,player2)==-1)
+	if(initializePlayer(player1,WHITE)==-1)
+	{
+		return -1;
+	}
+	if(initializePlayer(player2,BLACK)==-1)
 	{
 		return -1;
 	}
@@ -55,20 +90,11 @@ int newMatch(Player* player1,Player* player2)
 		return -1;
 	}
 
+	nextTurn = BLACK;
+	currentPlayer = player1;
+	adversary = player2;
 	do
 	{
-		if(nextTurn == player1->color)
-		{
-			currentPlayer = player1;
-			adversary = player2;
-			nextTurn = player2->color;
-		}
-		else
-		{
-			currentPlayer = player2;
-			adversary = player1;
-			nextTurn = player1->color;
-		}
 
 		if(turn(currentPlayer,recordedMoves)==-1)
 		{
@@ -93,6 +119,19 @@ int newMatch(Player* player1,Player* player2)
 		{
 			printf("MAT!!\n");
 			endMatch = 1;
+		}
+
+		if(nextTurn == player1->color)
+		{
+			currentPlayer = player1;
+			adversary = player2;
+			nextTurn = player2->color;
+		}
+		else
+		{
+			currentPlayer = player2;
+			adversary = player1;
+			nextTurn = player1->color;
 		}
 
 	}while(!endMatch);

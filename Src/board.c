@@ -385,75 +385,6 @@ int initializeBoard(Player* player1, Player* player2)
 {
 	int i,j;
 
-	Piece *whitePieces[16];
-	Piece *blackPieces[16];
-
-	for(i=0;i<16;i++)
-	{
-		whitePieces[i] = NULL;
-		blackPieces[i] = NULL;
-	}
-
-	// allocate memory for pieces
-	for(i=0;i<16;i++)
-	{
-		whitePieces[i] = malloc(sizeof(Piece));
-		blackPieces[i] = malloc(sizeof(Piece));
-		if(whitePieces[i] == NULL)
-		{
-			goto error;
-		}
-	}
-
-	// initialize pieces
-	for(i=0;i<16;i++)
-	{
-		whitePieces[i]->color = WHITE;
-		blackPieces[i]->color = BLACK;
-	}
-
-	whitePieces[0]->name = ROOK;
-	whitePieces[1]->name = KNIGHT;
-	whitePieces[2]->name = BISHOP;
-	whitePieces[3]->name = QUEEN;
-	whitePieces[4]->name = KING;
-	whitePieces[5]->name = BISHOP;
-	whitePieces[6]->name = KNIGHT;
-	whitePieces[7]->name = ROOK;
-
-	blackPieces[0]->name = ROOK;
-	blackPieces[1]->name = KNIGHT;
-	blackPieces[2]->name = BISHOP;
-	blackPieces[3]->name = QUEEN;
-	blackPieces[4]->name = KING;
-	blackPieces[5]->name = BISHOP;
-	blackPieces[6]->name = KNIGHT;
-	blackPieces[7]->name = ROOK;
-
-	for(i=8;i<16;i++)
-	{
-		whitePieces[i]->name = PAWN;
-		blackPieces[i]->name = PAWN;
-	}
-
-	for(i=0;i<8;i++)
-	{
-		whitePieces[i]->i = 0;
-		whitePieces[i]->j = i;
-
-		blackPieces[i]->i = 7;
-		blackPieces[i]->j = i;
-	}
-
-	for(i=8;i<16;i++)
-	{
-		whitePieces[i]->i = 1;
-		whitePieces[i]->j = i - 8;
-
-		whitePieces[i]->i = 6;
-		whitePieces[i]->j = i - 8;
-	}
-
 	// initialize board squares
 	for(i=0;i<8;i++)
 	{
@@ -474,40 +405,18 @@ int initializeBoard(Player* player1, Player* player2)
 	// place pieces on the board
 	for(i=0;i<8;i++)
 	{
-		cb.array[0][i].piece = whitePieces[i];
-		cb.array[7][i].piece = blackPieces[i];
+		cb.array[0][i].piece = player1->pieces[i];
+		cb.array[7][i].piece = player2->pieces[i];
 
 	}
 
 	for(i=8;i<16;i++)
 	{
-		cb.array[1][i - 8].piece = whitePieces[i];
-		cb.array[6][i - 8].piece = blackPieces[i];
+		cb.array[1][i - 8].piece = player1->pieces[i];
+		cb.array[6][i - 8].piece = player2->pieces[i];
 	}
-
-	if(player1->color == WHITE)
-	{
-		player1->king = whitePieces[4];
-		player2->king = blackPieces[4];
-	}
-	else
-	{
-		player1->king = blackPieces[4];
-		player2->king = whitePieces[4];
-	}
-
 
 	return 0;
-
-	error:
-
-	for(i=0;i<16;i++)
-	{
-		free(whitePieces[i]);
-		free(blackPieces[i]);
-	}
-
-	return -1;
 }
 
 

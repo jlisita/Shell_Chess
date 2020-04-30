@@ -22,17 +22,16 @@ struct ListPieces
 typedef struct Player Player;
 struct Player
 {
-	char name[SIZENAME];
 	Color color;
 	Piece* king;
+	char name[SIZENAME];
 	int isChess;
 	int isMat;
+	Piece* pieces[16];
 	ListPieces* capuredPieces;
 };
 
-
-void createPlayers(Player* player1, Player* player2);
-int initializePlayers(Player* player1, Player* player2);
+int initializePlayer(Player* player,Color color);
 int updateCapturePiece(Player* player,int k,int l);
 ListPieces* createListPiece();
 int addPiece(ListPieces* list, Piece* piece);

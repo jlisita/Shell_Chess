@@ -1,47 +1,102 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "player.h"
 #include "game.h"
 #include <time.h>
 
-void createPlayers(Player* player1, Player* player2)
+int initializePlayer(Player* player, Color color)
 {
-	printf("Player 1: Enter your name\n");
-	readString(player1->name,SIZENAME);
-	printf("Player 2: Enter your name\n");
-	readString(player2->name,SIZENAME);
-	player1->king = NULL;
-	player2->king = NULL;
-}
-
-int initializePlayers(Player* player1, Player* player2)
-{
-	Color color;
-	srand(time(NULL));
-
-	player1->isChess = 0;
-	player2->isChess = 0;
-	player1->isMat = 0;
-	player2->isMat = 0;
-	player1->capuredPieces = createListPiece();
-	player2->capuredPieces = createListPiece();
-	if(player1->capuredPieces == NULL || player2->capuredPieces == NULL )
+	int i;
+	player->color = color;
+	player->isChess = 0;
+	player->isMat = 0;
+	player->capuredPieces = createListPiece();
+	if(player->capuredPieces == NULL )
 	{
 		return -1;
 	}
-	color = (Color)(rand()%2);
-
 	if(color == WHITE)
 	{
-		player1->color = WHITE;
-		player2->color = BLACK;
+		strcpy(player->name,"White player");
 	}
 	else
 	{
-		player1->color = BLACK;
-		player2->color = WHITE;
+		strcpy(player->name,"Black player");
 	}
+
+	for(i=0;i<16;i++)
+	{
+		player->pieces[i] = NULL;
+	}
+
+	// allocate memory for pieces
+	for(i=0;i<16;i++)
+	{
+		player->pieces[i] = malloc(sizeof(Piece));
+		if(player->pieces[i] == NULL)
+		{
+			goto error;
+		}
+	}
+
+	// initialize pieces
+	for(i=0;i<16;i++)
+	{
+		player->pieces[i]->color = color;
+	}
+
+	player->pieces[0]->name = ROOK;
+	player->pieces[1]->name = KNIGHT;
+	player->pieces[2]->name = BISHOP;
+	player->pieces[3]->name = QUEEN;
+	player->pieces[4]->name = KING;
+	player->pieces[5]->name = BISHOP;
+	player->pieces[6]->name = KNIGHT;
+	player->pieces[7]->name = ROOK;
+
+	for(i=8;i<16;i++)
+	{
+		player->pieces[i]->name = PAWN;
+	}
+
+	for(i=0;i<8;i++)
+	{
+		player->pieces[i]->j = i;
+		if(color==WHITE)
+		{
+			player->pieces[i]->i = 0;
+		}
+		else
+		{
+			player->pieces[i]->i = 7;
+		}
+	}
+
+	for(i=8;i<16;i++)
+	{
+		if(color == WHITE)
+		{
+			player->pieces[i]->i = 1;
+			player->pieces[i]->j = i - 8;
+		}
+		else
+		{
+			player->pieces[i]->i = 6;
+			player->pieces[i]->j = i - 8;
+		}
+	}
+	player->king = player->pieces[4];
 	return 0;
+
+	error:
+
+	for(i=0;i<16;i++)
+	{
+		free(player->pieces[i]);
+	}
+
+	return -1;
 }
 
 int updateCapturePiece(Player* player,int k,int l)

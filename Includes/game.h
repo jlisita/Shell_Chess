@@ -6,8 +6,9 @@
 
 #define MAXCOMMANDSIZE 10
 
+int menuMode(int* mode);
 int game();
-int newMatch(Player* player1,Player* player2);
+int newMatch();
 int turn(Player* player, char* recordedMoves);
 void updateRecordedMoves(Player* player, char* recordedMoves, char* command);
 int verifyCommand(char* command);
