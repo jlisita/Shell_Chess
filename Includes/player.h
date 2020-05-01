@@ -31,7 +31,7 @@ struct Player
 	ListPieces* capuredPieces;
 };
 
-int initializePlayer(Player* player,Color color);
+int initializePlayer(Player* player, char* name,Color color);
 int updateCapturePiece(Player* player,int k,int l);
 ListPieces* createListPiece();
 int addPiece(ListPieces* list, Piece* piece);

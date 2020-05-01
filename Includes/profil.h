@@ -32,6 +32,7 @@ int loadProfil(Profil* myProfil);
 int addFriends(Profil* myProfil);
 ListProfil* createListProfil();
 int addProfil(ListProfil* list, Profil profil);
-void printListProfil(ListProfil* list);
+Profil* getProfil(ListProfil* list, int n);
+int printListProfil(ListProfil* list);
 
 #endif

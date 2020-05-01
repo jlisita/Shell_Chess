@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "game.h"
 #include "profil.h"
 
@@ -18,19 +19,13 @@ int createProfil(Profil* myProfil)
 		goto error;
 	}
 
-	file = fopen("myprofile.txt","w");
+	file = fopen("myprofile.txt","w+");
 	if(file == NULL)
 	{
 		perror("fopen");
 		goto error;
 	}
-	fprintf(file,"%s\t%s",myProfil->name, myProfil->IPadress);
-	if(errno)
-	{
-		perror("fprintf");
-		goto error;
-	}
-
+	fprintf(file,"%s\t%s\n",myProfil->name, myProfil->IPadress);
 	fclose(file);
 	return 0;
 
@@ -51,7 +46,10 @@ int loadProfil(Profil* myProfil)
 	file = fopen("myprofile.txt", "r");
 	if(file == NULL)
 	{
-		perror("fopen");
+		if(errno != 2)
+		{
+			perror("fopen");
+		}
 		goto error;
 	}
 	fscanf(file,"%s\t%s\n",myProfil->name,myProfil->IPadress);
@@ -153,23 +151,46 @@ int addProfil(ListProfil* list, Profil profil)
 	return 0;
 }
 
-void printListProfil(ListProfil* list)
+Profil* getProfil(ListProfil* list, int n)
+{
+	if(n >= list->size || list == NULL)
+	{
+		return NULL;
+	}
+	int i = 0;
+	ElementProfil* ptrEl= NULL;
+	ptrEl = list->first;
+	if(list->size == 1)
+	{
+		return &(list->first->profil);
+	}
+	while(i<n)
+	{
+		printf(" %d. %s\tIP: %s\n",i,ptrEl->profil.name, ptrEl->profil.IPadress);
+		ptrEl = ptrEl->next;
+		i++;
+	}
+	return &(ptrEl->profil);
+}
+
+int printListProfil(ListProfil* list)
 {
 	ElementProfil* ptrEl= NULL;
 	if(list==NULL)
 	{
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	else
 	{
-
+		int i =1;
 		ptrEl = list->first;
 		while(ptrEl!=NULL)
 		{
-			printf("name = %s, IP adress = %s\n",ptrEl->profil.name, ptrEl->profil.IPadress);
+			printf(" %d. %s\tIP: %s\n",i,ptrEl->profil.name, ptrEl->profil.IPadress);
 			ptrEl = ptrEl->next;
+			i++;
 		}
 		printf("\n");
 	}
-
+	return 0;
 }

@@ -405,15 +405,31 @@ int initializeBoard(Player* player1, Player* player2)
 	// place pieces on the board
 	for(i=0;i<8;i++)
 	{
-		cb.array[0][i].piece = player1->pieces[i];
-		cb.array[7][i].piece = player2->pieces[i];
-
+		if(player1->color == WHITE)
+		{
+			cb.array[0][i].piece = player1->pieces[i];
+			cb.array[7][i].piece = player2->pieces[i];
+		}
+		else
+		{
+			cb.array[0][i].piece = player2->pieces[i];
+			cb.array[7][i].piece = player1->pieces[i];
+		}
 	}
 
 	for(i=8;i<16;i++)
 	{
-		cb.array[1][i - 8].piece = player1->pieces[i];
-		cb.array[6][i - 8].piece = player2->pieces[i];
+		if(player1->color == WHITE)
+		{
+			cb.array[1][i - 8].piece = player1->pieces[i];
+			cb.array[6][i - 8].piece = player2->pieces[i];
+		}
+		else
+		{
+			cb.array[1][i - 8].piece = player2->pieces[i];
+			cb.array[6][i - 8].piece = player1->pieces[i];
+		}
+
 	}
 
 	return 0;

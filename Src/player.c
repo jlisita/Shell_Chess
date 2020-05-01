@@ -5,10 +5,11 @@
 #include "game.h"
 #include <time.h>
 
-int initializePlayer(Player* player, Color color)
+int initializePlayer(Player* player,char* name,Color color)
 {
 	int i;
 	player->color = color;
+	strcpy(player->name,name);
 	player->isChess = 0;
 	player->isMat = 0;
 	player->capuredPieces = createListPiece();
@@ -16,20 +17,11 @@ int initializePlayer(Player* player, Color color)
 	{
 		return -1;
 	}
-	if(color == WHITE)
-	{
-		strcpy(player->name,"White player");
-	}
-	else
-	{
-		strcpy(player->name,"Black player");
-	}
 
 	for(i=0;i<16;i++)
 	{
 		player->pieces[i] = NULL;
 	}
-
 	// allocate memory for pieces
 	for(i=0;i<16;i++)
 	{
