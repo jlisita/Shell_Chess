@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include "game.h"
 
-#define PORT 23
+#define PORT 1025
 
 
 int menuMode(int* mode)
@@ -254,9 +254,11 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 	Player* temp;
 	int socketServeur, socketClient;
 	struct sockaddr_in sinServeur, sinClient;
+	char ip[100]="";
 
 	if(mode == 1)
 	{
+		strcpy(ip,myProfil->IPadress);
 		myColor = WHITE;
 		adversaryColor = BLACK;
 		currentPlayer = player1;
@@ -264,13 +266,14 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 	}
 	else
 	{
+		strcpy(ip,myProfil->IPadress);
 		myColor = BLACK;
 		adversaryColor = WHITE;
 		currentPlayer = player2;
 		nextPlayer = player1;
 	}
 
-	if(connexion(mode, &socketServeur, &socketClient, &sinServeur, &sinClient) == -1)
+	if(connexion(ip,mode, &socketServeur, &socketClient, &sinServeur, &sinClient) == -1)
 	{
 		printf("connection failed\n");
 		return -1;
@@ -485,7 +488,7 @@ int verifyCommand(char* command)
 	}
 }
 
-int connexion(int mode, int* socketServeur, int* socketClient, struct sockaddr_in* sinServeur, struct sockaddr_in* sinClient)
+int connexion(char* ip, int mode, int* socketServeur, int* socketClient, struct sockaddr_in* sinServeur, struct sockaddr_in* sinClient)
 {
 	if(mode == 1)
 	{
@@ -498,8 +501,7 @@ int connexion(int mode, int* socketServeur, int* socketClient, struct sockaddr_i
 			return -1;
 		}
 		sinServeur->sin_family = AF_INET;
-		//sinServeur->sin_addr.s_addr = inet_addr(ipaddr);
-		sinServeur->sin_addr.s_addr = htonl(INADDR_ANY);
+		sinServeur->sin_addr.s_addr = inet_addr(ip);
 		sinServeur->sin_port = htons(PORT);
 
 		if(bind(*socketServeur, (struct sockaddr*)sinServeur, sizeof(*sinServeur)) == -1)
@@ -535,8 +537,7 @@ int connexion(int mode, int* socketServeur, int* socketClient, struct sockaddr_i
 		int nbrTentative;
 
 		sinServeur->sin_family = AF_INET;
-		//sinServeur->sin_addr.s_addr = inet_addr(ipaddr);
-		sinServeur->sin_addr.s_addr = inet_addr("127.0.0.1");
+		sinServeur->sin_addr.s_addr = inet_addr(ip);
 		sinServeur->sin_port = htons(PORT);
 
 		*socketClient = socket(AF_INET, SOCK_STREAM, 0);
