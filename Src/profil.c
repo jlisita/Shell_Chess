@@ -12,8 +12,6 @@ int createProfil(Profil* myProfil)
 
 	printf("Saisir votre prénom:");
 	readString(myProfil->name, MAXSIZESTR);
-	printf("Saisir l'adresse IP:");
-	readString(myProfil->IPadress, MAXSIZESTR);
 	if((myProfil->friends = createListProfil()) == NULL)
 	{
 		goto error;
@@ -25,7 +23,7 @@ int createProfil(Profil* myProfil)
 		perror("fopen");
 		goto error;
 	}
-	fprintf(file,"%s\t%s\n",myProfil->name, myProfil->IPadress);
+	fprintf(file,"%s\n",myProfil->name);
 	fclose(file);
 	return 0;
 
@@ -43,6 +41,8 @@ int loadProfil(Profil* myProfil)
 	int ret = 0;
 	Profil friend = {"","",NULL};
 
+	strcpy(myProfil->IPadress,"");
+
 	file = fopen("myprofile.txt", "r");
 	if(file == NULL)
 	{
@@ -52,7 +52,7 @@ int loadProfil(Profil* myProfil)
 		}
 		goto error;
 	}
-	fscanf(file,"%s\t%s\n",myProfil->name,myProfil->IPadress);
+	fscanf(file,"%s\n",myProfil->name);
 	if((myProfil->friends = createListProfil()) == NULL)
 	{
 		goto error;
