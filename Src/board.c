@@ -7,27 +7,35 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 {
 	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
 	{
-		return -1;
+		exit (-1);
 	}
-	int allowedMovement = 0, avoidChess = 0;
+	int allowedMovement = 0;
 	Piece* tempPiece = NULL;
 	if(isEmptySquare(i,j))
 	{
-		printf("No piece on this square\n");
+		if(!isTestChess && !isTestMat)
+		{
+			printf("No piece on this square\n");
+		}
 		return 0;
 	}
 
 	Piece* piece = cb.array[i][j].piece;
 	if( ((getColor(i,j) != player->color) && !isTestChess) || ( (getColor(i,j) == player->color)  && isTestChess))
 	{
-		printf("Can't move this piece\n");
+		if(!isTestChess && !isTestMat)
+		{
+			printf("Can't move this piece\n");
+		}
 		return 0;
 	}
 
-	if( (!isEmptySquare(k,l) && getColor(i,j) == WHITE && getColor(k,l) == WHITE)
-		|| (!isEmptySquare(k,l) && getColor(i,j) == BLACK && getColor(k,l) == BLACK) )
+	if( !isEmptySquare(k,l) && (getColor(i,j) ==  getColor(k,l)) )
 	{
-		printf("Can't eat your own piece\n");
+		if(!isTestChess && !isTestMat)
+		{
+			printf("Can't eat your own piece\n");
+		}
 		return 0;
 	}
 
@@ -53,7 +61,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 			break;
 	}
 
-	if(allowedMovement==0)
+	if(!allowedMovement)
 	{
 		if(!isTestChess && !isTestMat)
 		{
@@ -63,19 +71,12 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 	}
 	else if(!isTestChess)
 	{
-		int ret;
+		// test if the move lead to chess
+		int chess;
 		tempPiece = cb.array[k][l].piece;
 		movePiece(i,j,k,l);
-		ret = testChess(player);
-		if(ret == -1)
-		{
-			return -1;
-		}
-		else
-		{
-			avoidChess = !ret;
-		}
-		if(!avoidChess && !isTestMat)
+		chess = testChess(player);
+		if(chess && !isTestMat)
 		{
 			printf("This move would lead to chess\n");
 		}
@@ -86,7 +87,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 			cb.array[k][l].piece = tempPiece;
 			cb.array[k][l].isOccupied = 1;
 		}
-		return avoidChess;
+		return !chess;
 	}
 	else
 	{
@@ -115,31 +116,15 @@ int movePiece(int i, int j, int k, int l)
 // test if the king of player can be captured by the adversary
 int testChess(Player* player)
 {
-	int i,j,ret;
-	Color color2;
-	if(player->color == WHITE)
-	{
-		color2 = BLACK;
-	}
-	else
-	{
-		color2 = WHITE;
-	}
+	int i,j;
+
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<8;j++)
 		{
-			if(cb.array[i][j].isOccupied && cb.array[i][j].piece->color == color2
-				&& (ret=canMovePiece(player,i,j,player->king->i,player->king->j,1,0)))
+			if(canMovePiece(player,i,j,player->king->i,player->king->j,1,0))
 			{
-				if(ret==-1)
-				{
-					return -1;
-				}
-				else
-				{
-					return 1;
-				}
+				return 1;
 			}
 		}
 	}
@@ -149,8 +134,9 @@ int testChess(Player* player)
 // test if the king of player can be unavoidably capured by the adversary
 int testMat(Player* player)
 {
-	int i,j,k,l,ret;
+	int i,j,k,l;
 	Color color = player->color;
+
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<8;j++)
@@ -161,20 +147,10 @@ int testMat(Player* player)
 				{
 					for(l=0;l<8;l++)
 					{
-						if((!cb.array[k][l].isOccupied
-							|| (cb.array[k][l].isOccupied && cb.array[k][l].piece->color != color))
-							&& (ret=canMovePiece(player,i,j,k,l,0,1)))
+						if(canMovePiece(player,i,j,k,l,0,1))
 						{
-							if(ret==-1)
-							{
-								return-1;
-							}
-							else
-							{
-								return 0;
-							}
+							return 0;
 						}
-
 					}
 				}
 			}
