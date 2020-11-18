@@ -3,13 +3,14 @@
 #include "board.h"
 
 // test if the piece can be moved
-int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, int isTestMat)
+int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int isTestChess, int isTestMat)
 {
 	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
 	{
 		exit (-1);
 	}
 	int allowedMovement = 0;
+	int isEnPassantCapture = 0;
 	Piece* tempPiece = NULL;
 	if(isEmptySquare(i,j))
 	{
@@ -57,9 +58,10 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 			allowedMovement = canMoveKnight(i,j,k,l);
 			break;
 		case PAWN:
-			allowedMovement = canMovePawn(i,j,k,l);
+			allowedMovement = (canMovePawn(i,j,k,l) || enPassantCapture(i,j,k,l,m,n, &isEnPassantCapture));
 			break;
 	}
+
 
 	if(!allowedMovement)
 	{
@@ -73,8 +75,18 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 	{
 		// test if the move lead to chess
 		int chess;
-		tempPiece = cb.array[k][l].piece;
+
+		if(!isEnPassantCapture)
+		{
+			*m = k;
+			*n = l;
+		}
+		tempPiece = cb.array[*m][*n].piece;
+		cb.array[*m][*n].piece = NULL;
+		cb.array[*m][*n].isOccupied = 0;
 		movePiece(i,j,k,l);
+		setI(cb.array[k][l].piece, k, cb.counterMove);
+		setJ(cb.array[k][l].piece, l, cb.counterMove);
 		chess = testChess(player);
 		if(chess && !isTestMat)
 		{
@@ -82,10 +94,12 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int isTestChess, in
 		}
 
 		movePiece(k,l,i,j);
+		setI(cb.array[i][j].piece, i, cb.counterMove);
+		setJ(cb.array[i][j].piece, j, cb.counterMove);
 		if(tempPiece!=NULL)
 		{
-			cb.array[k][l].piece = tempPiece;
-			cb.array[k][l].isOccupied = 1;
+			cb.array[*m][*n].piece = tempPiece;
+			cb.array[*m][*n].isOccupied = 1;
 		}
 		return !chess;
 	}
@@ -105,12 +119,26 @@ int movePiece(int i, int j, int k, int l)
 	}
 	Piece* piece = cb.array[i][j].piece;
 	cb.array[k][l].piece = piece;
-	cb.array[k][l].piece->i=k;
-	cb.array[k][l].piece->j=l;
 	cb.array[k][l].isOccupied = 1;
 	cb.array[i][j].piece = NULL;
 	cb.array[i][j].isOccupied = 0;
 	return 0;
+}
+
+void updatePosition( int counterMove)
+{
+	int i, j;
+	for(i=0;i<8;i++)
+	{
+		for(j=0;j<8;j++)
+		{
+			if(!isEmptySquare(i,j))
+			{
+				setI(cb.array[i][j].piece, i, counterMove);
+				setJ(cb.array[i][j].piece, j, counterMove);
+			}
+		}
+	}
 }
 
 // test if the king of player can be captured by the adversary
@@ -122,7 +150,7 @@ int testChess(Player* player)
 	{
 		for(j=0;j<8;j++)
 		{
-			if(canMovePiece(player,i,j,player->king->i,player->king->j,1,0))
+			if(canMovePiece(player,i,j,player->king->i[cb.counterMove],player->king->j[cb.counterMove],NULL,NULL,1,0))
 			{
 				return 1;
 			}
@@ -134,7 +162,7 @@ int testChess(Player* player)
 // test if the king of player can be unavoidably capured by the adversary
 int testMat(Player* player)
 {
-	int i,j,k,l;
+	int i,j,k,l,m=0,n=0;
 	Color color = player->color;
 
 	for(i=0;i<8;i++)
@@ -147,7 +175,7 @@ int testMat(Player* player)
 				{
 					for(l=0;l<8;l++)
 					{
-						if(canMovePiece(player,i,j,k,l,0,1))
+						if(canMovePiece(player,i,j,k,l,&m,&n,0,1))
 						{
 							return 0;
 						}
@@ -157,6 +185,16 @@ int testMat(Player* player)
 		}
 	}
 	return 1;
+}
+
+Piece* getPiece(int i, int j)
+{
+	return cb.array[i][j].piece;
+}
+
+Name getName(int i, int j)
+{
+	return getPiece(i,j)->name;
 }
 
 // test is the square doesn't contain piece.
@@ -360,8 +398,8 @@ int fileIndexToInt(char c)
 int initializeBoard(Player* player1, Player* player2)
 {
 	int i,j;
-
 	// initialize board squares
+	cb.counterMove=0;
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<8;j++)

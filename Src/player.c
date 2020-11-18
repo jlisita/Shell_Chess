@@ -54,14 +54,14 @@ int initializePlayer(Player* player,char* name,Color color)
 
 	for(i=0;i<8;i++)
 	{
-		player->pieces[i]->j = i;
+		player->pieces[i]->j[0] = i;
 		if(color==WHITE)
 		{
-			player->pieces[i]->i = 0;
+			player->pieces[i]->i[0] = 0;
 		}
 		else
 		{
-			player->pieces[i]->i = 7;
+			player->pieces[i]->i[0] = 7;
 		}
 	}
 
@@ -69,13 +69,13 @@ int initializePlayer(Player* player,char* name,Color color)
 	{
 		if(color == WHITE)
 		{
-			player->pieces[i]->i = 1;
-			player->pieces[i]->j = i - 8;
+			player->pieces[i]->i[0] = 1;
+			player->pieces[i]->j[0] = i - 8;
 		}
 		else
 		{
-			player->pieces[i]->i = 6;
-			player->pieces[i]->j = i - 8;
+			player->pieces[i]->i[0] = 6;
+			player->pieces[i]->j[0] = i - 8;
 		}
 	}
 	player->king = player->pieces[4];
@@ -93,13 +93,13 @@ int initializePlayer(Player* player,char* name,Color color)
 
 int updateCapturePiece(Player* player,int k,int l)
 {
-	if(cb.array[k][l].isOccupied)
+	if(addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
 	{
-		if(addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
-		{
-			return -1;
-		}
+		return -1;
 	}
+	cb.array[k][l].piece = NULL;
+	cb.array[k][l].isOccupied = 0;
+
 	return 0;
 }
 

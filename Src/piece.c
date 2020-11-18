@@ -3,6 +3,41 @@
 #include "board.h"
 
 
+
+int getI(Piece* piece, int counterMove)
+{
+	return piece->i[counterMove];
+}
+
+int getLastI(Piece* piece, int counterMove)
+{
+	int i = piece->i[counterMove];
+	int k;
+	for(k=0; k>=0; k--)
+	{
+		if(piece->i[k]!=i)
+		{
+			return piece->i[k];
+		}
+	}
+	return i;
+}
+
+int getJ(Piece* piece, int counterMove)
+{
+	return piece->j[counterMove];
+}
+
+void setI(Piece* piece, int i, int counterMove)
+{
+	piece->i[counterMove] = i;
+}
+
+void setJ(Piece* piece, int j, int counterMove)
+{
+	piece->j[counterMove] = j;
+}
+
 // test if the king can be moved
 int canMoveKing(int i, int j, int k, int l)
 {
@@ -83,6 +118,34 @@ int canMovePawn(int i, int j, int k, int l)
 	}
 	return 0;
 
+}
+
+int enPassantCapture(int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture)
+{
+	if(getColor(i,j) == WHITE)
+	{
+	 	if( (k==i+1) && ((l==j+1) || (l==j-1)) && isEmptySquare(k,l) && !isEmptySquare(k,j) && (getColor(k,j)==BLACK) && (getName(k,j)==PAWN)
+	 		&& (getI(getPiece(k,j),cb.counterMove)==4) && ( getLastI(getPiece(k,j),cb.counterMove)==6))
+	 	{
+	 		*m = k;
+	 		*n = j;
+	 		*isEnPassantCapture = 1;
+	 		return 1;
+	 	}
+	}
+	else
+	{
+		if( (k==i-1) && ((l==j+1) || (l==j-1)) && isEmptySquare(k,l) && !isEmptySquare(k,j) && (getColor(k,j)==WHITE) && (getName(k,j)==PAWN)
+		  && (getI(getPiece(k,j),cb.counterMove) == 3) && ( getLastI(getPiece(k,j),cb.counterMove)==1) )
+		{
+			*m = k;
+	 		*n = j;
+	 		*isEnPassantCapture = 1;
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 

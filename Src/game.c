@@ -182,7 +182,6 @@ int localParty()
 	{
 		return -1;
 	}
-
 	nextTurn = BLACK;
 	currentPlayer = player1;
 	adversary = player2;
@@ -228,6 +227,8 @@ int localParty()
 		}
 
 	}while(!endMatch);
+
+	printfBoard(adversary->color);
 
 	if(player1->isMat)
 	{
@@ -296,6 +297,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 	do
 	{
 		int i,j,k,l;
+		int m=0,n=0;
 		char command[10]="";
 		int validCommand=0, validMovement=0;
 
@@ -327,7 +329,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 				k = rankIndexToInt(command[4]);
 				l = fileIndexToInt(command[3]);
 
-				validMovement = canMovePiece(currentPlayer,i,j,k,l,0,0);
+				validMovement = canMovePiece(currentPlayer,i,j,k,l,&m,&n,0,0);
 
 			}while(!validMovement);
 
@@ -352,12 +354,15 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 		}
 
 		updateRecordedMoves(currentPlayer,recordedMoves,command);
-		if(updateCapturePiece(currentPlayer,k,l)==-1)
+		if(cb.array[m][n].isOccupied)
 		{
-			return -1;
+			if(updateCapturePiece(currentPlayer,m,n)==-1)
+			{
+				return -1;
+			}
 		}
-		movePiece(i,j,k,l);
-
+		cb.counterMove++;
+		updatePosition(cb.counterMove);
 		nextPlayer->isChess = testChess(nextPlayer);
 		if(nextPlayer->isChess == -1)
 		{
@@ -383,6 +388,8 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 		nextPlayer = temp;
 
 	}while(!endMatch);
+
+	printfBoard(nextPlayer->color);
 
 	if(player1->isMat)
 	{
@@ -411,7 +418,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 // manage command entry and update game
 int turn(Player* player, char* recordedMoves)
 {
-	int i,j,k,l;
+	int i,j,k,l,m=0,n=0;
 	char command[10]="";
 	int validCommand=0, validMovement=0;
 
@@ -441,16 +448,22 @@ int turn(Player* player, char* recordedMoves)
 		k = rankIndexToInt(command[4]);
 		l = fileIndexToInt(command[3]);
 
-		validMovement = canMovePiece(player,i,j,k,l,0,0);
+		validMovement = canMovePiece(player,i,j,k,l,&m,&n,0,0);
 
 	}while(!validMovement);
 
     updateRecordedMoves(player,recordedMoves,command);
-	if(updateCapturePiece(player,k,l)==-1)
+	if(cb.array[m][n].isOccupied)
 	{
-		return -1;
+		if(updateCapturePiece(player,m,n)==-1)
+		{
+			return -1;
+		}
 	}
 	movePiece(i,j,k,l);
+	cb.counterMove++;
+	updatePosition(cb.counterMove);
+
 	return 0;
 }
 
