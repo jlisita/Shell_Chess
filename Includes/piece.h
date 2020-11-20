@@ -35,6 +35,7 @@ int getJ(Piece* piece, int counterMove);
 void setI(Piece* piece, int i, int counterMove);
 void setJ(Piece* piece, int j, int counterMove);
 void printfPiece(Piece* piece);
+int hasMoved(Piece* piece, int counterMove);
 int canMoveKing(int i, int j, int k, int l);
 int canMoveQueen(int i, int j, int k, int l);
 int canMoveBishop(int i, int j, int k, int l);

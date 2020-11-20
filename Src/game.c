@@ -298,6 +298,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 	{
 		int i,j,k,l;
 		int m=0,n=0;
+		int isCastling=0;
 		char command[10]="";
 		int validCommand=0, validMovement=0;
 
@@ -329,7 +330,15 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 				k = rankIndexToInt(command[4]);
 				l = fileIndexToInt(command[3]);
 
-				validMovement = canMovePiece(currentPlayer,i,j,k,l,&m,&n,0,0);
+				isCastling = testCastling(currentPlayer,i,j,k,l);
+				if(isCastling)
+				{
+					validMovement = 1;
+				}
+				else
+				{
+					validMovement = canMovePiece(currentPlayer,i,j,k,l,&m,&n,0,0);
+				}
 
 			}while(!validMovement);
 
@@ -351,16 +360,35 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 			j = fileIndexToInt(command[0]);
 			k = rankIndexToInt(command[4]);
 			l = fileIndexToInt(command[3]);
+
+			isCastling = testCastling(currentPlayer,i,j,k,l);
+			if(isCastling)
+			{
+				validMovement = 1;
+			}
+			else
+			{
+				validMovement = canMovePiece(currentPlayer,i,j,k,l,&m,&n,0,0);
+			}
 		}
 
 		updateRecordedMoves(currentPlayer,recordedMoves,command);
-		if(cb.array[m][n].isOccupied)
+		if(!isCastling)
 		{
-			if(updateCapturePiece(currentPlayer,m,n)==-1)
+			if(cb.array[m][n].isOccupied)
 			{
-				return -1;
+				if(updateCapturePiece(currentPlayer,m,n)==-1)
+				{
+					return -1;
+				}
 			}
+			movePiece(i,j,k,l);
 		}
+		else
+		{
+			castling(i,j,k,l);
+		}
+
 		cb.counterMove++;
 		updatePosition(cb.counterMove);
 		nextPlayer->isChess = testChess(nextPlayer);
@@ -419,6 +447,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 int turn(Player* player, char* recordedMoves)
 {
 	int i,j,k,l,m=0,n=0;
+	int isCastling=0;
 	char command[10]="";
 	int validCommand=0, validMovement=0;
 
@@ -448,19 +477,37 @@ int turn(Player* player, char* recordedMoves)
 		k = rankIndexToInt(command[4]);
 		l = fileIndexToInt(command[3]);
 
-		validMovement = canMovePiece(player,i,j,k,l,&m,&n,0,0);
+		isCastling = (!(player->isChess) && !(player->hasCastled) && testCastling(player, i, j, k, l));
+		if(isCastling)
+		{
+			player->hasCastled = 1;
+			validMovement = 1;
+		}
+		else
+		{
+			validMovement = canMovePiece(player,i,j,k,l,&m,&n,0,0);
+		}
 
 	}while(!validMovement);
 
     updateRecordedMoves(player,recordedMoves,command);
-	if(cb.array[m][n].isOccupied)
-	{
-		if(updateCapturePiece(player,m,n)==-1)
+    if(!isCastling)
+    {
+    	if(cb.array[m][n].isOccupied)
 		{
-			return -1;
+			if(updateCapturePiece(player,m,n)==-1)
+			{
+				return -1;
+			}
 		}
-	}
-	movePiece(i,j,k,l);
+		movePiece(i,j,k,l);
+    }
+    else
+    {
+    	castling(i,j,k,l);
+    	player->hasCastled = 1;
+    }
+
 	cb.counterMove++;
 	updatePosition(cb.counterMove);
 

@@ -38,6 +38,22 @@ void setJ(Piece* piece, int j, int counterMove)
 	piece->j[counterMove] = j;
 }
 
+int hasMoved(Piece* piece, int counterMove)
+{
+	int k;
+	int i = getI(piece, 0);
+	int j = getJ(piece, 0);
+	for(k=0;k<=counterMove;k++)
+	{
+		if(getI(piece,k)!=i || getJ(piece,k)!=j)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 // test if the king can be moved
 int canMoveKing(int i, int j, int k, int l)
 {

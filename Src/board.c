@@ -109,6 +109,45 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int
 	}
 }
 
+// test if the castle movement is possible
+int testCastling(Player* player, int i, int j, int k, int l)
+{
+	if( isEmptySquare(i,j) || isEmptySquare(k,l) || (getColor(i,j) != player->color)  || (getColor(i,j) != player->color)
+		|| hasMoved(getPiece(i,j), cb.counterMove) || hasMoved(getPiece(k,l), cb.counterMove) )
+	{
+		return 0;
+	}
+	if(getColor(i,j) == WHITE)
+	{
+		if( i==0 && j==4 && k==0 && (l==0 || l==7 ) )
+		{
+			if(l==0 && !canBeEaten(player,0,3) && !canBeEaten(player,0,2) && isEmptyBetween(0,4,0,0))
+			{
+				return 1;
+			}
+			else if(l==7 && !canBeEaten(player,0,5) && !canBeEaten(player,0,6) && isEmptyBetween(0,5,0,7))
+			{
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		if(i==7 && j==4 && k==7 && (l==0 || l==7 ) )
+		{
+			if(l==0 && !canBeEaten(player,7,3) && !canBeEaten(player,7,2) && isEmptyBetween(7,4,7,0))
+			{
+				return 1;
+			}
+			else if(l==7 && !canBeEaten(player,7,5) && !canBeEaten(player,7,6) && isEmptyBetween(7,5,7,7))
+			{
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 
 // update the board with new position of the piece
 int movePiece(int i, int j, int k, int l)
@@ -122,6 +161,42 @@ int movePiece(int i, int j, int k, int l)
 	cb.array[k][l].isOccupied = 1;
 	cb.array[i][j].piece = NULL;
 	cb.array[i][j].isOccupied = 0;
+	return 0;
+}
+
+// execute castle movement
+int castling(int i, int j, int k, int l)
+{
+	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
+	{
+		return -1;
+	}
+	if(getColor(i,j) == WHITE)
+	{
+		if(l==0)
+		{
+			movePiece(0,4,0,2);
+			movePiece(0,0,0,3);
+		}
+		else
+		{
+			movePiece(0,4,0,6);
+			movePiece(0,7,0,5);
+		}
+	}
+	else
+	{
+		if(l==0)
+		{
+			movePiece(7,4,7,2);
+			movePiece(7,0,7,3);
+		}
+		else
+		{
+			movePiece(7,4,7,6);
+			movePiece(7,7,7,5);
+		}
+	}
 	return 0;
 }
 
@@ -144,13 +219,19 @@ void updatePosition( int counterMove)
 // test if the king of player can be captured by the adversary
 int testChess(Player* player)
 {
+	return canBeEaten(player, player->king->i[cb.counterMove], player->king->j[cb.counterMove]);
+}
+
+// test if the Piece on the position (k,l) of player can be captured by the adversary
+int canBeEaten(Player* player, int k, int l)
+{
 	int i,j;
 
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<8;j++)
 		{
-			if(canMovePiece(player,i,j,player->king->i[cb.counterMove],player->king->j[cb.counterMove],NULL,NULL,1,0))
+			if(canMovePiece(player,i,j,k,l,NULL,NULL,1,0))
 			{
 				return 1;
 			}

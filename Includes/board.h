@@ -28,10 +28,13 @@ int isEmptySquare(int i,int j);
 int isEmptyBetween(int i, int j, int k, int l);
 Color getColor(int i, int j);
 Name getName(int i, int j);
+int canBeEaten(Player* player, int k, int l);
 int testChess(Player* player);
 int testMat(Player* Player);
+int testCastling(Player* player, int i, int j, int k, int l);
 int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int isTestChess, int isTestMat);
 int movePiece(int i, int j, int k, int l);
+int castling(int i, int j, int k, int l);
 void updatePosition( int counterMove);
 
 #endif
