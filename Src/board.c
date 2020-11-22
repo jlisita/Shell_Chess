@@ -200,6 +200,44 @@ int castling(int i, int j, int k, int l)
 	return 0;
 }
 
+// return 1 and change piece name if the pawn can be promoted
+int promotion(int i, int j)
+{
+	int selectedPiece = 0;
+	if(getName(i,j)!=PAWN || i!=7 )
+	{
+		return 0;
+	}
+	else
+	{
+		do
+		{
+			printf("Choose the new piece\n");
+			printf("1. Bishop\n");
+			printf("2. Knight\n");
+			printf("3. Rook\n");
+			printf("4. Queen\n");
+			readInt(&selectedPiece);
+
+		}while(selectedPiece < 1 || selectedPiece > 4 );
+		switch(selectedPiece)
+		{
+			case 1:
+			setName(i,j,BISHOP);
+			break;
+			case 2:
+			setName(i,j,KNIGHT);
+			break;
+			case 3:
+			setName(i,j,ROOK);
+			break;
+			case 4:
+			setName(i,j,QUEEN);
+		}
+		return 1;
+	}
+}
+
 void updatePosition( int counterMove)
 {
 	int i, j;
@@ -276,6 +314,11 @@ Piece* getPiece(int i, int j)
 Name getName(int i, int j)
 {
 	return getPiece(i,j)->name;
+}
+
+void setName(int i, int j, Name name)
+{
+	getPiece(i,j)->name = name;
 }
 
 // test is the square doesn't contain piece.

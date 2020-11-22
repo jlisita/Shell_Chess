@@ -501,6 +501,7 @@ int turn(Player* player, char* recordedMoves)
 			}
 		}
 		movePiece(i,j,k,l);
+		promotion(k,l);
     }
     else
     {

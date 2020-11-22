@@ -3,6 +3,7 @@
 
 #include "piece.h"
 #include "player.h"
+#include "game.h"
 
 typedef struct Square Square;
 struct Square
@@ -28,6 +29,7 @@ int isEmptySquare(int i,int j);
 int isEmptyBetween(int i, int j, int k, int l);
 Color getColor(int i, int j);
 Name getName(int i, int j);
+void setName(int i, int j, Name name);
 int canBeEaten(Player* player, int k, int l);
 int testChess(Player* player);
 int testMat(Player* Player);
@@ -36,5 +38,6 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int
 int movePiece(int i, int j, int k, int l);
 int castling(int i, int j, int k, int l);
 void updatePosition( int counterMove);
+int promotion(int i, int j);
 
 #endif
