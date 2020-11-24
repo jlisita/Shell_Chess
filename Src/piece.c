@@ -13,7 +13,7 @@ int getLastI(Piece* piece, int counterMove)
 {
 	int i = piece->i[counterMove];
 	int k;
-	for(k=0; k>=0; k--)
+	for(k=counterMove-1; k>=0; k--)
 	{
 		if(piece->i[k]!=i)
 		{
