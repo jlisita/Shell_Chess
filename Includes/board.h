@@ -39,5 +39,6 @@ int movePiece(int i, int j, int k, int l);
 int castling(int i, int j, int k, int l);
 void updatePosition( int counterMove);
 int promotion(int i, int j);
+int capturePiece(Player* player,int k,int l);
 
 #endif

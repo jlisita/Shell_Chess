@@ -27,13 +27,14 @@ struct Player
 	char name[SIZENAME];
 	int isChess;
 	int isMat;
+	int isCastling;
 	int hasCastled;
 	Piece* pieces[16];
 	ListPieces* capuredPieces;
+	char command[10];
 };
 
 int initializePlayer(Player* player, char* name,Color color);
-int updateCapturePiece(Player* player,int k,int l);
 ListPieces* createListPiece();
 int addPiece(ListPieces* list, Piece* piece);
 void printListPieces(ListPieces* list);

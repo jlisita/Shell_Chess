@@ -3,7 +3,7 @@
 #include "board.h"
 
 // test if the piece can be moved
-int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int isTestChess, int isTestMat)
+int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int* captured2, int isTestChess, int isTestMat)
 {
 	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
 	{
@@ -58,10 +58,9 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int
 			allowedMovement = canMoveKnight(i,j,k,l);
 			break;
 		case PAWN:
-			allowedMovement = (canMovePawn(i,j,k,l) || enPassantCapture(i,j,k,l,m,n, &isEnPassantCapture));
+			allowedMovement = (canMovePawn(i,j,k,l) || enPassantCapture(i,j,k,l,captured1,captured2,&isEnPassantCapture));
 			break;
 	}
-
 
 	if(!allowedMovement)
 	{
@@ -78,12 +77,12 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int
 
 		if(!isEnPassantCapture)
 		{
-			*m = k;
-			*n = l;
+			*captured1 = k;
+			*captured2 = l;
 		}
-		tempPiece = cb.array[*m][*n].piece;
-		cb.array[*m][*n].piece = NULL;
-		cb.array[*m][*n].isOccupied = 0;
+		tempPiece = cb.array[*captured1][*captured2].piece;
+		cb.array[*captured1][*captured2].piece = NULL;
+		cb.array[*captured1][*captured2].isOccupied = 0;
 		movePiece(i,j,k,l);
 		setI(cb.array[k][l].piece, k, cb.counterMove);
 		setJ(cb.array[k][l].piece, l, cb.counterMove);
@@ -98,8 +97,8 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int
 		setJ(cb.array[i][j].piece, j, cb.counterMove);
 		if(tempPiece!=NULL)
 		{
-			cb.array[*m][*n].piece = tempPiece;
-			cb.array[*m][*n].isOccupied = 1;
+			cb.array[*captured1][*captured2].piece = tempPiece;
+			cb.array[*captured1][*captured2].isOccupied = 1;
 		}
 		return !chess;
 	}
@@ -238,6 +237,20 @@ int promotion(int i, int j)
 	}
 }
 
+// add the piece to the captured piece list of the player and update the board
+int capturePiece(Player* player,int k,int l)
+{
+	if(addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
+	{
+		return -1;
+	}
+	cb.array[k][l].piece = NULL;
+	cb.array[k][l].isOccupied = 0;
+
+	return 0;
+}
+
+// update the new position of all pieces according to position on board
 void updatePosition( int counterMove)
 {
 	int i, j;

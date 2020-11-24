@@ -12,8 +12,10 @@ int initializePlayer(Player* player,char* name,Color color)
 	strcpy(player->name,name);
 	player->isChess = 0;
 	player->isMat = 0;
+	player->isCastling = 0;
 	player->hasCastled = 0;
 	player->capuredPieces = createListPiece();
+	strcpy(player->command,"");
 	if(player->capuredPieces == NULL )
 	{
 		return -1;
@@ -90,18 +92,6 @@ int initializePlayer(Player* player,char* name,Color color)
 	}
 
 	return -1;
-}
-
-int updateCapturePiece(Player* player,int k,int l)
-{
-	if(addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
-	{
-		return -1;
-	}
-	cb.array[k][l].piece = NULL;
-	cb.array[k][l].isOccupied = 0;
-
-	return 0;
 }
 
 ListPieces* createListPiece()

@@ -162,83 +162,212 @@ int game()
 // initialize board and manage player turn
 int localParty()
 {
-	Player* player1 = malloc(sizeof(Player));
-	Player* player2 = malloc(sizeof(Player));
-	char recordedMoves[1000]="";
-	int endMatch = 0;
-	Color nextTurn;
-	Player* currentPlayer = NULL;
-	Player* adversary = NULL;
+	PartyData* pData = malloc(sizeof(PartyData));
 
-	if(initializePlayer(player1,"White player",WHITE)==-1)
+	if(initParty(pData) == -1)
 	{
 		return -1;
 	}
-	if(initializePlayer(player2,"Black player",BLACK)==-1)
-	{
-		return -1;
-	}
-	if(initializeBoard(player1,player2)==-1)
-	{
-		return -1;
-	}
-	nextTurn = BLACK;
-	currentPlayer = player1;
-	adversary = player2;
+
 	do
 	{
-
-		if(turn(currentPlayer,recordedMoves)==-1)
+		if(turn(pData->currentPlayer,pData->recordedMoves)==-1)
 		{
 			return -1;
 		}
 
-		adversary->isChess = testChess(adversary);
-		if(adversary->isChess == -1)
+		pData->adversary->isChess = testChess(pData->adversary);
+		if(pData->adversary->isChess == -1)
 		{
 			return -1;
 		}
-		if(adversary->isChess)
+		if(pData->adversary->isChess)
 		{
 			printf("CHESS!\n");
-			adversary->isMat = testMat(adversary);
-			if(adversary->isChess == -1)
+			pData->adversary->isMat = testMat(pData->adversary);
+			if(pData->adversary->isChess == -1)
 			{
 				return -1;
 			}
 		}
-		if(adversary->isMat)
+		if(pData->adversary->isMat)
 		{
 			printf("MAT!!\n");
-			endMatch = 1;
+			pData->endMatch = 1;
 		}
 
-		if(nextTurn == player1->color)
+		if(pData->nextTurn == pData->player1->color)
 		{
-			currentPlayer = player1;
-			adversary = player2;
-			nextTurn = player2->color;
+			pData->currentPlayer = pData->player1;
+			pData->adversary = pData->player2;
+			pData->nextTurn = pData->player2->color;
 		}
 		else
 		{
-			currentPlayer = player2;
-			adversary = player1;
-			nextTurn = player1->color;
+			pData->currentPlayer = pData->player2;
+			pData->adversary = pData->player1;
+			pData->nextTurn = pData->player1->color;
 		}
+	}while(!pData->endMatch);
 
-	}while(!endMatch);
+	printfBoard(pData->adversary->color);
 
-	printfBoard(adversary->color);
-
-	if(player1->isMat)
+	if(pData->player1->isMat)
 	{
-		printf("%s has won by Mat.\n",player2->name);
+		printf("%s has won by Mat.\n",pData->player2->name);
 	}
 	else
 	{
-		printf("%s has won by Mat.\n",player1->name);
+		printf("%s has won by Mat.\n",pData->player1->name);
+	}
+	free(pData);
+
+	return 0;
+}
+
+int initParty(PartyData* pData)
+{
+	pData->player1 = malloc(sizeof(Player));
+	pData->player2 = malloc(sizeof(Player));
+	if(initializePlayer(pData->player1,"White player",WHITE)==-1)
+	{
+		return -1;
+	}
+	if(initializePlayer(pData->player2,"Black player",BLACK)==-1)
+	{
+		return -1;
+	}
+	strcpy(pData->recordedMoves,"");
+	pData->endMatch = 0;
+	pData->currentPlayer = pData->player1;
+	pData->adversary = pData->player2;
+	pData->nextTurn = BLACK;
+	if(initializeBoard(pData->player1,pData->player2)==-1)
+	{
+		return -1;
 	}
 	return 0;
+}
+
+// manage command entry and update game
+int turn(Player* player, char* recordedMoves)
+{
+	int i,j,k,l;
+	int captured1=0, captured2=0;
+	int validMovement=0;
+	printfBoard(player->color);
+	printf("%s\n",recordedMoves);
+	printf("Pieces captured: ");
+	printListPieces(player->capuredPieces);
+
+	do
+	{
+		validMovement = nextMovement(player, &i, &j, &k, &l, &captured1, &captured2);
+
+	}while(!validMovement);
+
+	cb.counterMove++;
+    if(updateBoard(player, i, j, k, l, captured1, captured2)==-1)
+    {
+    	return -1;
+    }
+
+	updateRecordedMoves(player,recordedMoves);
+
+	return 0;
+}
+
+// test if the movement asked by the player is possible
+int nextMovement(Player* player, int* i, int* j, int* k, int* l, int* captured1, int* captured2)
+{
+	int validCommand=0, validMovement=0;
+
+	do
+	{
+		printf("%s, enter your move:",player->name);
+		if(readString(player->command,MAXCOMMANDSIZE)==-1)
+		{
+			return -1;
+		}
+		validCommand = verifyCommand(player->command);
+		if(validCommand == -1)
+		{
+			return -1;
+		}
+	}while(validCommand!=1);
+
+	*i = rankIndexToInt((player->command)[1]);
+	*j = fileIndexToInt((player->command)[0]);
+	*k = rankIndexToInt((player->command)[4]);
+	*l = fileIndexToInt((player->command)[3]);
+
+	player->isCastling = (!(player->isChess) && !(player->hasCastled) && testCastling(player, *i, *j, *k, *l));
+	if(!player->isCastling)
+	{
+		validMovement = canMovePiece(player,*i,*j,*k,*l,captured1,captured2,0,0);
+	}
+
+	return validMovement;
+}
+
+// Update square of the board and position od the pieces
+int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int captured2)
+{
+	if(!(player->isCastling))
+    {
+    	if(!isEmptySquare(captured1,captured2))
+		{
+			if(capturePiece(player,captured1,captured2)==-1)
+			{
+				return -1;
+			}
+		}
+		movePiece(i,j,k,l);
+		promotion(k,l);
+    }
+    else
+    {
+    	castling(i,j,k,l);
+    	player->isCastling = 0;
+    	player->hasCastled = 1;
+    }
+    updatePosition(cb.counterMove);
+    return 0;
+}
+
+// update list of moves during the match
+void updateRecordedMoves(Player* player, char* recordedMoves)
+{
+	static int indexMoves = 0;
+	if(player->color==WHITE)
+	{
+		indexMoves++;
+		char index[10]="";
+		sprintf(index,"%d. ",indexMoves);
+		strcat(recordedMoves,index);
+	}
+	char cmd[10]="";
+	sprintf(cmd,"%c%c%c%c ",tolower(player->command[0]),tolower(player->command[1]),tolower(player->command[3]),tolower(player->command[4]));
+	strcat(recordedMoves,cmd);
+}
+
+
+// test if command entered is valid
+int verifyCommand(char* command)
+{
+	char* rankIndex = "12345678";
+	char* fileIndex = "abcdefghABCDEFGH";
+
+	if(strchr(fileIndex, command[0]) != NULL && strchr(rankIndex, command[1])!=NULL && command[2]==' '
+		&& strchr(fileIndex, command[3])!=NULL && strchr(rankIndex, command[4])!=NULL)
+	{
+		return 1;
+	}
+	else
+	{
+		printf("Commande invalide\n");
+		return 0;
+	}
 }
 
 
@@ -299,7 +428,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 		int i,j,k,l;
 		int m=0,n=0;
 		int isCastling=0;
-		char command[10]="";
+
 		int validCommand=0, validMovement=0;
 
 		printfBoard(myColor);
@@ -314,21 +443,21 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 				do
 				{
 					printf("%s, enter your move:",currentPlayer->name);
-					if(readString(command,MAXCOMMANDSIZE)==-1)
+					if(readString(currentPlayer->command,MAXCOMMANDSIZE)==-1)
 					{
 						return -1;
 					}
-					validCommand = verifyCommand(command);
+					validCommand = verifyCommand(currentPlayer->command);
 					if(validCommand == -1)
 					{
 						return -1;
 					}
 				}while(validCommand!=1);
 
-				i = rankIndexToInt(command[1]);
-				j = fileIndexToInt(command[0]);
-				k = rankIndexToInt(command[4]);
-				l = fileIndexToInt(command[3]);
+				i = rankIndexToInt((currentPlayer->command)[1]);
+				j = fileIndexToInt((currentPlayer->command)[0]);
+				k = rankIndexToInt((currentPlayer->command)[4]);
+				l = fileIndexToInt((currentPlayer->command)[3]);
 
 				isCastling = testCastling(currentPlayer,i,j,k,l);
 				if(isCastling)
@@ -342,7 +471,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 
 			}while(!validMovement);
 
-			if(send(socketClient, command, 100, 0) == -1)
+			if(send(socketClient, currentPlayer->command, 100, 0) == -1)
 			{
 				perror("send:");
 				return -1;
@@ -351,15 +480,15 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 		else
 		{
 			printf("It is %s's turn\n",currentPlayer->name);
-			if(recv(socketClient, command, 100, 0) == -1)
+			if(recv(socketClient, currentPlayer->command, 100, 0) == -1)
 			{
 				perror("recv:");
 				return -1;
 			}
-			i = rankIndexToInt(command[1]);
-			j = fileIndexToInt(command[0]);
-			k = rankIndexToInt(command[4]);
-			l = fileIndexToInt(command[3]);
+			i = rankIndexToInt(currentPlayer->command[1]);
+			j = fileIndexToInt(currentPlayer->command[0]);
+			k = rankIndexToInt(currentPlayer->command[4]);
+			l = fileIndexToInt(currentPlayer->command[3]);
 
 			isCastling = testCastling(currentPlayer,i,j,k,l);
 			if(isCastling)
@@ -372,12 +501,12 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 			}
 		}
 
-		updateRecordedMoves(currentPlayer,recordedMoves,command);
+		updateRecordedMoves(currentPlayer,recordedMoves);
 		if(!isCastling)
 		{
 			if(cb.array[m][n].isOccupied)
 			{
-				if(updateCapturePiece(currentPlayer,m,n)==-1)
+				if(capturePiece(currentPlayer,m,n)==-1)
 				{
 					return -1;
 				}
@@ -441,113 +570,6 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 	}
 
 	return 0;
-}
-
-// manage command entry and update game
-int turn(Player* player, char* recordedMoves)
-{
-	int i,j,k,l,m=0,n=0;
-	int isCastling=0;
-	char command[10]="";
-	int validCommand=0, validMovement=0;
-
-	printfBoard(player->color);
-	printf("%s\n",recordedMoves);
-	printf("Pieces captured: ");
-	printListPieces(player->capuredPieces);
-
-	do
-	{
-		do
-		{
-			printf("%s, enter your move:",player->name);
-			if(readString(command,MAXCOMMANDSIZE)==-1)
-			{
-				return -1;
-			}
-			validCommand = verifyCommand(command);
-			if(validCommand == -1)
-			{
-				return -1;
-			}
-		}while(validCommand!=1);
-
-		i = rankIndexToInt(command[1]);
-		j = fileIndexToInt(command[0]);
-		k = rankIndexToInt(command[4]);
-		l = fileIndexToInt(command[3]);
-
-		isCastling = (!(player->isChess) && !(player->hasCastled) && testCastling(player, i, j, k, l));
-		if(isCastling)
-		{
-			player->hasCastled = 1;
-			validMovement = 1;
-		}
-		else
-		{
-			validMovement = canMovePiece(player,i,j,k,l,&m,&n,0,0);
-		}
-
-	}while(!validMovement);
-
-    updateRecordedMoves(player,recordedMoves,command);
-    if(!isCastling)
-    {
-    	if(cb.array[m][n].isOccupied)
-		{
-			if(updateCapturePiece(player,m,n)==-1)
-			{
-				return -1;
-			}
-		}
-		movePiece(i,j,k,l);
-		promotion(k,l);
-    }
-    else
-    {
-    	castling(i,j,k,l);
-    	player->hasCastled = 1;
-    }
-
-	cb.counterMove++;
-	updatePosition(cb.counterMove);
-
-	return 0;
-}
-
-// update list of moves during the match
-void updateRecordedMoves(Player* player, char* recordedMoves, char* command)
-{
-	static int indexMoves = 0;
-	if(player->color==WHITE)
-	{
-		indexMoves++;
-		char index[10]="";
-		sprintf(index,"%d. ",indexMoves);
-		strcat(recordedMoves,index);
-	}
-	char cmd[10]="";
-	sprintf(cmd,"%c%c%c%c ",tolower(command[0]),tolower(command[1]),tolower(command[3]),tolower(command[4]));
-	strcat(recordedMoves,cmd);
-}
-
-
-// test if command entered is valid
-int verifyCommand(char* command)
-{
-	char* rankIndex = "12345678";
-	char* fileIndex = "abcdefghABCDEFGH";
-
-	if(strchr(fileIndex, command[0]) != NULL && strchr(rankIndex, command[1])!=NULL && command[2]==' '
-		&& strchr(fileIndex, command[3])!=NULL && strchr(rankIndex, command[4])!=NULL)
-	{
-		return 1;
-	}
-	else
-	{
-		printf("Commande invalide\n");
-		return 0;
-	}
 }
 
 int connexion(char* ipServeur, char*ipClient, int mode, int* socketServeur, int* socketClient, struct sockaddr_in* sinServeur, struct sockaddr_in* sinClient)
