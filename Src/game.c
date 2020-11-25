@@ -85,7 +85,7 @@ int game()
 		}
 		if(ret == 1)
 		{
-			if(localParty(NULL,NULL)==-1)
+			if(localGame(NULL,NULL)==-1)
 			{
 				return -1;
 			}
@@ -136,7 +136,7 @@ int game()
 			{
 				return -1;
 			}
-			if(onlineParty(myProfil,adversaryProfil,ret)==-1)
+			if(onlineGame(myProfil,adversaryProfil,ret)==-1)
 			{
 				return -1;
 			}
@@ -160,89 +160,84 @@ int game()
 }
 
 // initialize board and manage player turn
-int localParty()
+int localGame()
 {
-	PartyData* pData = malloc(sizeof(PartyData));
+	GameData* gameData = malloc(sizeof(GameData));
 
-	if(initParty(pData) == -1)
+	if(initGame(gameData) == -1)
 	{
 		return -1;
 	}
 
 	do
 	{
-		if(turn(pData->currentPlayer,pData->recordedMoves)==-1)
+		if(turn(gameData->currentPlayer,gameData->recordedMoves)==-1)
 		{
 			return -1;
 		}
 
-		pData->adversary->isChess = testChess(pData->adversary);
-		if(pData->adversary->isChess == -1)
+		if(!gameData->currentPlayer->abandonment)
 		{
-			return -1;
-		}
-		if(pData->adversary->isChess)
-		{
-			printf("CHESS!\n");
-			pData->adversary->isMat = testMat(pData->adversary);
-			if(pData->adversary->isChess == -1)
+
+			gameData->adversary->isChess = testChess(gameData->adversary);
+			if(gameData->adversary->isChess == -1)
 			{
 				return -1;
 			}
-		}
-		if(pData->adversary->isMat)
-		{
-			printf("MAT!!\n");
-			pData->endMatch = 1;
+			if(gameData->adversary->isChess)
+			{
+				printf("CHESS!\n");
+				gameData->adversary->isMat = testMat(gameData->adversary);
+				if(gameData->adversary->isChess == -1)
+				{
+					return -1;
+				}
+			}
 		}
 
-		if(pData->nextTurn == pData->player1->color)
-		{
-			pData->currentPlayer = pData->player1;
-			pData->adversary = pData->player2;
-			pData->nextTurn = pData->player2->color;
-		}
-		else
-		{
-			pData->currentPlayer = pData->player2;
-			pData->adversary = pData->player1;
-			pData->nextTurn = pData->player1->color;
-		}
-	}while(!pData->endMatch);
+		gameData->endGame = endOfGame(gameData);
 
-	printfBoard(pData->adversary->color);
+		if(!gameData->endGame)
+		{
+			if(gameData->nextTurn == gameData->player1->color)
+			{
+				gameData->currentPlayer = gameData->player1;
+				gameData->adversary = gameData->player2;
+				gameData->nextTurn = gameData->player2->color;
+			}
+			else
+			{
+				gameData->currentPlayer = gameData->player2;
+				gameData->adversary = gameData->player1;
+				gameData->nextTurn = gameData->player1->color;
+			}
+		}
 
-	if(pData->player1->isMat)
-	{
-		printf("%s has won by Mat.\n",pData->player2->name);
-	}
-	else
-	{
-		printf("%s has won by Mat.\n",pData->player1->name);
-	}
-	free(pData);
+	}while(!gameData->endGame);
+
+	free(gameData);
 
 	return 0;
 }
 
-int initParty(PartyData* pData)
+int initGame(GameData* gameData)
 {
-	pData->player1 = malloc(sizeof(Player));
-	pData->player2 = malloc(sizeof(Player));
-	if(initializePlayer(pData->player1,"White player",WHITE)==-1)
+	gameData->player1 = malloc(sizeof(Player));
+	gameData->player2 = malloc(sizeof(Player));
+	if(initializePlayer(gameData->player1,"White player",WHITE)==-1)
 	{
 		return -1;
 	}
-	if(initializePlayer(pData->player2,"Black player",BLACK)==-1)
+	if(initializePlayer(gameData->player2,"Black player",BLACK)==-1)
 	{
 		return -1;
 	}
-	strcpy(pData->recordedMoves,"");
-	pData->endMatch = 0;
-	pData->currentPlayer = pData->player1;
-	pData->adversary = pData->player2;
-	pData->nextTurn = BLACK;
-	if(initializeBoard(pData->player1,pData->player2)==-1)
+	strcpy(gameData->recordedMoves,"");
+	gameData->endGame = 0;
+	gameData->currentPlayer = gameData->player1;
+	gameData->adversary = gameData->player2;
+	gameData->nextTurn = BLACK;
+	if(initializeBoard(gameData->player1,gameData->player2)==-1)
 	{
 		return -1;
 	}
@@ -262,6 +257,17 @@ int turn(Player* player, char* recordedMoves)
 
 	do
 	{
+		int validCommand=0;
+		do
+		{
+			validCommand = getCommand(player);
+		}while(validCommand!=1);
+
+		if(player->abandonment)
+		{
+			return 0;
+		}
+
 		validMovement = nextMovement(player, &i, &j, &k, &l, &captured1, &captured2);
 
 	}while(!validMovement);
@@ -277,29 +283,56 @@ int turn(Player* player, char* recordedMoves)
 	return 0;
 }
 
+int getCommand(Player* player)
+{
+	int validCommand = 0;
+	printf("%s, enter your move:",player->name);
+	if(readString(player->command,MAXCOMMANDSIZE)==-1)
+	{
+		return -1;
+	}
+	validCommand = verifyCommand(player);
+	if(validCommand == 0)
+	{
+		return 0;
+	}
+	return 1;
+}
+
+// test if command entered is valid
+int verifyCommand(Player* player)
+{
+	char* rankIndex = "12345678";
+	char* fileIndex = "abcdefghABCDEFGH";
+	char* command = player->command;
+
+	if(strcmp("abandon",command)==0)
+	{
+		player->abandonment = 1;
+		return 1;
+	}
+	if(strchr(fileIndex, command[0]) != NULL && strchr(rankIndex, command[1])!=NULL && command[2]==' '
+		&& strchr(fileIndex, command[3])!=NULL && strchr(rankIndex, command[4])!=NULL)
+	{
+		return 1;
+	}
+	else
+	{
+		printf("Commande invalide\n");
+		return 0;
+	}
+}
+
 // test if the movement asked by the player is possible
 int nextMovement(Player* player, int* i, int* j, int* k, int* l, int* captured1, int* captured2)
 {
-	int validCommand=0, validMovement=0;
+	int validMovement=0;
+	char* command = player->command;
 
-	do
-	{
-		printf("%s, enter your move:",player->name);
-		if(readString(player->command,MAXCOMMANDSIZE)==-1)
-		{
-			return -1;
-		}
-		validCommand = verifyCommand(player->command);
-		if(validCommand == -1)
-		{
-			return -1;
-		}
-	}while(validCommand!=1);
-
-	*i = rankIndexToInt((player->command)[1]);
-	*j = fileIndexToInt((player->command)[0]);
-	*k = rankIndexToInt((player->command)[4]);
-	*l = fileIndexToInt((player->command)[3]);
+	*i = rankIndexToInt((command)[1]);
+	*j = fileIndexToInt((command)[0]);
+	*k = rankIndexToInt((command)[4]);
+	*l = fileIndexToInt((command)[3]);
 
 	player->isCastling = (!(player->isChess) && !(player->hasCastled) && testCastling(player, *i, *j, *k, *l));
 	if(!player->isCastling)
@@ -351,32 +384,29 @@ void updateRecordedMoves(Player* player, char* recordedMoves)
 	strcat(recordedMoves,cmd);
 }
 
-
-// test if command entered is valid
-int verifyCommand(char* command)
+// Test if the game sould be stop by abandon or Mat
+int endOfGame(GameData* gameData)
 {
-	char* rankIndex = "12345678";
-	char* fileIndex = "abcdefghABCDEFGH";
-
-	if(strchr(fileIndex, command[0]) != NULL && strchr(rankIndex, command[1])!=NULL && command[2]==' '
-		&& strchr(fileIndex, command[3])!=NULL && strchr(rankIndex, command[4])!=NULL)
+	if(gameData->adversary->isMat)
 	{
+		printfBoard(gameData->currentPlayer->color);
+		printf("End of game %s has won by Mat.\n\n",gameData->currentPlayer->name);
 		return 1;
 	}
-	else
+	else if (gameData->currentPlayer->abandonment)
 	{
-		printf("Commande invalide\n");
-		return 0;
+		printf("End of game %s has won by abandonment.\n\n",gameData->adversary->name);
+		return 1;
 	}
+	return 0;
 }
 
-
-int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
+int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode)
 {
 	Player* player1 = malloc(sizeof(Player));
 	Player* player2 = malloc(sizeof(Player));
 	char recordedMoves[1000]="";
-	int endMatch = 0;
+	int endGame = 0;
 	Color myColor;
 	Color adversaryColor;
 	Player* currentPlayer = NULL;
@@ -447,7 +477,7 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 					{
 						return -1;
 					}
-					validCommand = verifyCommand(currentPlayer->command);
+					validCommand = verifyCommand(currentPlayer);
 					if(validCommand == -1)
 					{
 						return -1;
@@ -537,14 +567,14 @@ int onlineParty(Profil* myProfil, Profil* adversaryProfil,int mode)
 		if(nextPlayer->isMat)
 		{
 			printf("MAT!!\n");
-			endMatch = 1;
+			endGame = 1;
 		}
 
 		temp = currentPlayer;
 		currentPlayer = nextPlayer;
 		nextPlayer = temp;
 
-	}while(!endMatch);
+	}while(!endGame);
 
 	printfBoard(nextPlayer->color);
 

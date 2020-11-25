@@ -27,6 +27,7 @@ struct Player
 	char name[SIZENAME];
 	int isChess;
 	int isMat;
+	int abandonment;
 	int isCastling;
 	int hasCastled;
 	Piece* pieces[16];
