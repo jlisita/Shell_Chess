@@ -27,6 +27,7 @@ struct Player
 	char name[SIZENAME];
 	int isChess;
 	int isMat;
+	int isStalemate;
 	int abandonment;
 	int isCastling;
 	int hasCastled;

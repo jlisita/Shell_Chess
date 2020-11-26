@@ -292,7 +292,7 @@ int canBeEaten(Player* player, int k, int l)
 }
 
 // test if the king of player can be unavoidably capured by the adversary
-int testMat(Player* player)
+int canDoLegalMove(Player* player)
 {
 	int i,j,k,l,m=0,n=0;
 	Color color = player->color;
@@ -309,14 +309,14 @@ int testMat(Player* player)
 					{
 						if(canMovePiece(player,i,j,k,l,&m,&n,0,1))
 						{
-							return 0;
+							return 1;
 						}
 					}
 				}
 			}
 		}
 	}
-	return 1;
+	return 0;
 }
 
 Piece* getPiece(int i, int j)

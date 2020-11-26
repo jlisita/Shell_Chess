@@ -176,44 +176,17 @@ int localGame()
 			return -1;
 		}
 
-		if(!gameData->currentPlayer->abandonment)
-		{
+		gameData->endOfGame = endOfGame(gameData);
 
-			gameData->adversary->isChess = testChess(gameData->adversary);
-			if(gameData->adversary->isChess == -1)
-			{
-				return -1;
-			}
-			if(gameData->adversary->isChess)
-			{
-				printf("CHESS!\n");
-				gameData->adversary->isMat = testMat(gameData->adversary);
-				if(gameData->adversary->isChess == -1)
-				{
-					return -1;
-				}
-			}
+		if(!gameData->endOfGame)
+		{
+			Player* temp = NULL;
+			temp = gameData->currentPlayer;
+			gameData->currentPlayer = gameData->adversary;
+			gameData->adversary = temp;
 		}
 
-		gameData->endGame = endOfGame(gameData);
-
-		if(!gameData->endGame)
-		{
-			if(gameData->nextTurn == gameData->player1->color)
-			{
-				gameData->currentPlayer = gameData->player1;
-				gameData->adversary = gameData->player2;
-				gameData->nextTurn = gameData->player2->color;
-			}
-			else
-			{
-				gameData->currentPlayer = gameData->player2;
-				gameData->adversary = gameData->player1;
-				gameData->nextTurn = gameData->player1->color;
-			}
-		}
-
-	}while(!gameData->endGame);
+	}while(!gameData->endOfGame);
 
 	free(gameData);
 
@@ -233,10 +206,10 @@ int initGame(GameData* gameData)
 		return -1;
 	}
 	strcpy(gameData->recordedMoves,"");
-	gameData->endGame = 0;
+	gameData->endOfGame = 0;
 	gameData->currentPlayer = gameData->player1;
 	gameData->adversary = gameData->player2;
-	gameData->nextTurn = BLACK;
+
 	if(initializeBoard(gameData->player1,gameData->player2)==-1)
 	{
 		return -1;
@@ -384,9 +357,28 @@ void updateRecordedMoves(Player* player, char* recordedMoves)
 	strcat(recordedMoves,cmd);
 }
 
-// Test if the game sould be stop by abandon or Mat
+// Update variable isChess, isMat,  and test if the game sould be stop
 int endOfGame(GameData* gameData)
 {
+	if(!gameData->currentPlayer->abandonment)
+	{
+		int legalMove = 0;
+		int chess = 0;
+		legalMove = canDoLegalMove(gameData->adversary);
+		chess = testChess(gameData->adversary);
+
+		if(chess)
+		{
+			printf("CHESS!\n");
+			gameData->adversary->isChess = 1;
+			gameData->adversary->isMat = !legalMove;
+		}
+		else
+		{
+			gameData->adversary->isStalemate = !legalMove;
+		}
+	}
+
 	if(gameData->adversary->isMat)
 	{
 		printfBoard(gameData->currentPlayer->color);
@@ -398,6 +390,11 @@ int endOfGame(GameData* gameData)
 		printf("End of game %s has won by abandonment.\n\n",gameData->adversary->name);
 		return 1;
 	}
+	else if(gameData->adversary->isStalemate)
+	{
+		printf("End of game by stalemate.\n\n");
+		return 1;
+	}
 	return 0;
 }
 
@@ -406,7 +403,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode)
 	Player* player1 = malloc(sizeof(Player));
 	Player* player2 = malloc(sizeof(Player));
 	char recordedMoves[1000]="";
-	int endGame = 0;
+	int endOfGame = 0;
 	Color myColor;
 	Color adversaryColor;
 	Player* currentPlayer = NULL;
@@ -558,7 +555,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode)
 		if(nextPlayer->isChess)
 		{
 			printf("CHESS!\n");
-			nextPlayer->isMat = testMat(nextPlayer);
+			nextPlayer->isMat = !canDoLegalMove(nextPlayer);
 			if(nextPlayer->isChess == -1)
 			{
 				return -1;
@@ -567,14 +564,14 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode)
 		if(nextPlayer->isMat)
 		{
 			printf("MAT!!\n");
-			endGame = 1;
+			endOfGame = 1;
 		}
 
 		temp = currentPlayer;
 		currentPlayer = nextPlayer;
 		nextPlayer = temp;
 
-	}while(!endGame);
+	}while(!endOfGame);
 
 	printfBoard(nextPlayer->color);
 

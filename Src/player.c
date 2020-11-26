@@ -13,6 +13,7 @@ int initializePlayer(Player* player,char* name,Color color)
 	player->isChess = 0;
 	player->isMat = 0;
 	player->abandonment = 0;
+	player->isStalemate = 0;
 	player->isCastling = 0;
 	player->hasCastled = 0;
 	player->capuredPieces = createListPiece();

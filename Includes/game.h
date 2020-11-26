@@ -15,8 +15,7 @@ struct GameData
 	Player* player1;
 	Player* player2;
 	char recordedMoves[1000];
-	int endGame;
-	Color nextTurn;
+	int endOfGame;
 	Player* currentPlayer;
 	Player* adversary;
 };
