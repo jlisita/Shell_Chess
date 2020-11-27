@@ -169,6 +169,8 @@ int localGame()
 		return -1;
 	}
 
+	gameData->player1->isPlaying = 1;
+
 	do
 	{
 		if(turn(gameData->currentPlayer,gameData->recordedMoves)==-1)
@@ -176,18 +178,22 @@ int localGame()
 			return -1;
 		}
 
-		gameData->endOfGame = endOfGame(gameData);
+		gameData->endOfGame = endOfGame(gameData->currentPlayer, gameData->nextPlayer);
 
 		if(!gameData->endOfGame)
 		{
 			Player* temp = NULL;
 			temp = gameData->currentPlayer;
-			gameData->currentPlayer = gameData->adversary;
-			gameData->adversary = temp;
+			gameData->currentPlayer = gameData->nextPlayer;
+			gameData->nextPlayer = temp;
+			gameData->currentPlayer->isPlaying = 1;
+			gameData->nextPlayer->isPlaying = 0;
 		}
 
 	}while(!gameData->endOfGame);
 
+	free(gameData->player1);
+	free(gameData->player2);
 	free(gameData);
 
 	return 0;
@@ -208,7 +214,7 @@ int initGame(GameData* gameData)
 	strcpy(gameData->recordedMoves,"");
 	gameData->endOfGame = 0;
 	gameData->currentPlayer = gameData->player1;
-	gameData->adversary = gameData->player2;
+	gameData->nextPlayer = gameData->player2;
 
 	if(initializeBoard(gameData->player1,gameData->player2)==-1)
 	{
@@ -249,6 +255,10 @@ int turn(Player* player, char* recordedMoves)
     if(updateBoard(player, i, j, k, l, captured1, captured2)==-1)
     {
     	return -1;
+    }
+    if(!player->isCastling)
+    {
+    	promotion(k,l);
     }
 
 	updateRecordedMoves(player,recordedMoves);
@@ -329,7 +339,6 @@ int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int c
 			}
 		}
 		movePiece(i,j,k,l);
-		promotion(k,l);
     }
     else
     {
@@ -358,39 +367,39 @@ void updateRecordedMoves(Player* player, char* recordedMoves)
 }
 
 // Update variable isChess, isMat,  and test if the game sould be stop
-int endOfGame(GameData* gameData)
+int endOfGame(Player* currentPlayer, Player* nextPlayer)
 {
-	if(!gameData->currentPlayer->abandonment)
+	if(!currentPlayer->abandonment)
 	{
 		int legalMove = 0;
 		int chess = 0;
-		legalMove = canDoLegalMove(gameData->adversary);
-		chess = testChess(gameData->adversary);
+		legalMove = canDoLegalMove(nextPlayer);
+		chess = testChess(nextPlayer);
 
 		if(chess)
 		{
 			printf("CHESS!\n");
-			gameData->adversary->isChess = 1;
-			gameData->adversary->isMat = !legalMove;
+			nextPlayer->isChess = 1;
+			nextPlayer->isMat = !legalMove;
 		}
 		else
 		{
-			gameData->adversary->isStalemate = !legalMove;
+			nextPlayer->isStalemate = !legalMove;
 		}
 	}
 
-	if(gameData->adversary->isMat)
+	if(nextPlayer->isMat)
 	{
-		printfBoard(gameData->currentPlayer->color);
-		printf("End of game %s has won by Mat.\n\n",gameData->currentPlayer->name);
+		printfBoard(currentPlayer->color);
+		printf("End of game %s has won by Mat.\n\n",currentPlayer->name);
 		return 1;
 	}
-	else if (gameData->currentPlayer->abandonment)
+	else if (currentPlayer->abandonment)
 	{
-		printf("End of game %s has won by abandonment.\n\n",gameData->adversary->name);
+		printf("End of game %s has won by abandonment.\n\n",nextPlayer->name);
 		return 1;
 	}
-	else if(gameData->adversary->isStalemate)
+	else if(currentPlayer->isStalemate)
 	{
 		printf("End of game by stalemate.\n\n");
 		return 1;
@@ -398,203 +407,180 @@ int endOfGame(GameData* gameData)
 	return 0;
 }
 
-int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode)
+int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 {
-	Player* player1 = malloc(sizeof(Player));
-	Player* player2 = malloc(sizeof(Player));
-	char recordedMoves[1000]="";
-	int endOfGame = 0;
-	Color myColor;
-	Color adversaryColor;
-	Player* currentPlayer = NULL;
-	Player* nextPlayer = NULL;
-	Player* temp;
 	int socketServeur, socketClient;
 	struct sockaddr_in sinServeur, sinClient;
 	char ipServeur[100]="";
 	char ipClient[100]="";
+	Player* player = NULL;
+	Player* adversary = NULL;
+	char recordedMoves[1000]="";
+	int gameOver = 0;
+	Player* currentPlayer = NULL;
+	Player* nextPlayer = NULL;
 
-	if(mode == 1)
+
+	if((player = malloc(sizeof(Player))) == NULL)
+	{
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+	if((adversary = malloc(sizeof(Player))) == NULL)
+	{
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+
+	if(mode==1)
 	{
 		strcpy(ipServeur, myProfil->IPadress);
 		strcpy(ipClient, adversaryProfil->IPadress);
-		myColor = WHITE;
-		adversaryColor = BLACK;
-		currentPlayer = player1;
-		nextPlayer = player2;
 	}
 	else
 	{
 		strcpy(ipServeur, adversaryProfil->IPadress);
-		myColor = BLACK;
-		adversaryColor = WHITE;
-		currentPlayer = player2;
-		nextPlayer = player1;
 	}
+
 	if(connexion(ipServeur, ipClient, mode, &socketServeur, &socketClient, &sinServeur, &sinClient) == -1)
 	{
 		printf("connection failed\n");
 		return -1;
 	}
 
-	if(initializePlayer(player1,myProfil->name,myColor)==-1)
+	if(mode == 1)
 	{
-		return -1;
+		if(initializePlayer(player,myProfil->name,WHITE)==-1)
+		{
+			return -1;
+		}
+		if(initializePlayer(adversary,adversaryProfil->name,BLACK)==-1)
+		{
+			return -1;
+		}
+		player->isPlaying = 1;
+		currentPlayer = player;
+		nextPlayer = adversary;
+
 	}
-	if(initializePlayer(player2,adversaryProfil->name,adversaryColor)==-1)
+	else
 	{
-		return -1;
+		if(initializePlayer(player,myProfil->name,BLACK)==-1)
+		{
+			return -1;
+		}
+		if(initializePlayer(adversary,adversaryProfil->name,WHITE)==-1)
+		{
+			return -1;
+		}
+		adversary->isPlaying = 1;
+		currentPlayer = adversary;
+		nextPlayer = player;
 	}
-	if(initializeBoard(player1,player2)==-1)
+
+	if(initializeBoard(player,adversary)==-1)
 	{
 		return -1;
 	}
 
 	do
 	{
-		int i,j,k,l;
-		int m=0,n=0;
-		int isCastling=0;
+		printfBoard(currentPlayer->color);
+		printf("%s\n",recordedMoves);
+		printf("Pieces captured by you: ");
+		printListPieces(player->capuredPieces);
+		printf("Pieces captured by %s: ",adversary->name);
+		printListPieces(adversary->capuredPieces);
 
-		int validCommand=0, validMovement=0;
-
-		printfBoard(myColor);
-   		printf("%s\n",recordedMoves);
-		printf("Pieces captured: ");
-		printListPieces(currentPlayer->capuredPieces);
-
-		if(currentPlayer->name == player1->name)
-		{
-			do
-			{
-				do
-				{
-					printf("%s, enter your move:",currentPlayer->name);
-					if(readString(currentPlayer->command,MAXCOMMANDSIZE)==-1)
-					{
-						return -1;
-					}
-					validCommand = verifyCommand(currentPlayer);
-					if(validCommand == -1)
-					{
-						return -1;
-					}
-				}while(validCommand!=1);
-
-				i = rankIndexToInt((currentPlayer->command)[1]);
-				j = fileIndexToInt((currentPlayer->command)[0]);
-				k = rankIndexToInt((currentPlayer->command)[4]);
-				l = fileIndexToInt((currentPlayer->command)[3]);
-
-				isCastling = testCastling(currentPlayer,i,j,k,l);
-				if(isCastling)
-				{
-					validMovement = 1;
-				}
-				else
-				{
-					validMovement = canMovePiece(currentPlayer,i,j,k,l,&m,&n,0,0);
-				}
-
-			}while(!validMovement);
-
-			if(send(socketClient, currentPlayer->command, 100, 0) == -1)
-			{
-				perror("send:");
-				return -1;
-			}
-		}
-		else
-		{
-			printf("It is %s's turn\n",currentPlayer->name);
-			if(recv(socketClient, currentPlayer->command, 100, 0) == -1)
-			{
-				perror("recv:");
-				return -1;
-			}
-			i = rankIndexToInt(currentPlayer->command[1]);
-			j = fileIndexToInt(currentPlayer->command[0]);
-			k = rankIndexToInt(currentPlayer->command[4]);
-			l = fileIndexToInt(currentPlayer->command[3]);
-
-			isCastling = testCastling(currentPlayer,i,j,k,l);
-			if(isCastling)
-			{
-				validMovement = 1;
-			}
-			else
-			{
-				validMovement = canMovePiece(currentPlayer,i,j,k,l,&m,&n,0,0);
-			}
-		}
-
-		updateRecordedMoves(currentPlayer,recordedMoves);
-		if(!isCastling)
-		{
-			if(cb.array[m][n].isOccupied)
-			{
-				if(capturePiece(currentPlayer,m,n)==-1)
-				{
-					return -1;
-				}
-			}
-			movePiece(i,j,k,l);
-		}
-		else
-		{
-			castling(i,j,k,l);
-		}
-
-		cb.counterMove++;
-		updatePosition(cb.counterMove);
-		nextPlayer->isChess = testChess(nextPlayer);
-		if(nextPlayer->isChess == -1)
+		if(turnOnline(currentPlayer, player->isPlaying, recordedMoves, socketClient)==-1)
 		{
 			return -1;
 		}
-		if(nextPlayer->isChess)
+
+		gameOver = endOfGame(currentPlayer, nextPlayer);
+
+		if(!gameOver)
 		{
-			printf("CHESS!\n");
-			nextPlayer->isMat = !canDoLegalMove(nextPlayer);
-			if(nextPlayer->isChess == -1)
-			{
-				return -1;
-			}
-		}
-		if(nextPlayer->isMat)
-		{
-			printf("MAT!!\n");
-			endOfGame = 1;
+			Player* temp = NULL;
+			temp = currentPlayer;
+			currentPlayer = nextPlayer;
+			nextPlayer = temp;
+			currentPlayer->isPlaying = 1;
+			nextPlayer->isPlaying = 0;
 		}
 
-		temp = currentPlayer;
-		currentPlayer = nextPlayer;
-		nextPlayer = temp;
+	}while(!gameOver);
 
-	}while(!endOfGame);
 
-	printfBoard(nextPlayer->color);
+	free(player);
+	free(adversary);
 
-	if(player1->isMat)
+	return 0;
+}
+
+int turnOnline(Player* currentPlayer, int isPlaying, char* recordedMoves, int socketClient)
+{
+	int i=0,j=0,k=0,l=0;
+	int captured1=0, captured2=0;
+	int validMovement=0;
+
+	if(isPlaying)
 	{
-		printf("%s has won by Mat.\n",player2->name);
+		printf("It's your turn\n");
+		do
+		{
+			int validCommand = 0;
+			do
+			{
+				validCommand = getCommand(currentPlayer);
+			}while(validCommand!=1);
+
+			if(currentPlayer->abandonment)
+			{
+				return 0;
+			}
+
+			validMovement = nextMovement(currentPlayer, &i, &j, &k, &l, &captured1, &captured2);
+
+		}while(!validMovement);
+
+		if(send(socketClient, currentPlayer->command, 100, 0) == -1)
+		{
+			perror("send:");
+			return -1;
+		}
 	}
 	else
 	{
-		printf("%s has won by Mat.\n",player1->name);
+		printf("It's %s turn\n",currentPlayer->name);
+
+		if(recv(socketClient, currentPlayer->command, 100, 0) == -1)
+		{
+			perror("recv:");
+			return -1;
+		}
+
+		if(strcmp("abandon",currentPlayer->command)==0)
+		{
+			currentPlayer->abandonment = 1;
+			return 0;
+		}
+
+		nextMovement(currentPlayer, &i, &j, &k, &l, &captured1, &captured2);
+
 	}
 
-	if(mode == 1)
-	{
-		if(close(socketServeur) == -1)
-		{
-			perror("close:");
-		}
-	}
-	if(close(socketClient) == -1)
-	{
-		perror("close:");
-	}
+	cb.counterMove++;
+    if(updateBoard(currentPlayer, i, j, k, l, captured1, captured2)==-1)
+    {
+    	return -1;
+    }
+    if(!currentPlayer->isCastling)
+    {
+    	promotionOnline(currentPlayer,k,l,socketClient);
+    }
+	updateRecordedMoves(currentPlayer,recordedMoves);
+
 
 	return 0;
 }

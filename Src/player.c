@@ -10,6 +10,7 @@ int initializePlayer(Player* player,char* name,Color color)
 	int i;
 	player->color = color;
 	strcpy(player->name,name);
+	player->isPlaying = 0;
 	player->isChess = 0;
 	player->isMat = 0;
 	player->abandonment = 0;

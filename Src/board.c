@@ -203,7 +203,7 @@ int castling(int i, int j, int k, int l)
 int promotion(int i, int j)
 {
 	int selectedPiece = 0;
-	if(getName(i,j)!=PAWN || i!=7 )
+	if(getName(i,j)!=PAWN || (i!=7 && getColor(i,j)== WHITE) || (i!=1 && getColor(i,j)== BLACK))
 	{
 		return 0;
 	}
@@ -235,6 +235,62 @@ int promotion(int i, int j)
 		}
 		return 1;
 	}
+}
+
+int promotionOnline(Player* player, int i, int j, int socket)
+{
+	int selectedPiece = 0;
+	char buffer[10] ="";
+	if(getName(i,j)!=PAWN || (i!=7 && getColor(i,j)== WHITE) || (i!=1 && getColor(i,j)== BLACK))
+	{
+		return 0;
+	}
+	if(player->isPlaying)
+	{
+		do
+		{
+			printf("Choose the new piece\n");
+			printf("1. Bishop\n");
+			printf("2. Knight\n");
+			printf("3. Rook\n");
+			printf("4. Queen\n");
+			readInt(&selectedPiece);
+
+		}while(selectedPiece < 1 || selectedPiece > 4 );
+
+		sprintf(buffer,"%d",selectedPiece);
+
+		if(send(socket, buffer, sizeof(buffer), 0) == -1)
+		{
+			perror("send:");
+			return -1;
+		}
+	}
+	else
+	{
+		if(recv(socket, buffer, sizeof(buffer), 0) == -1)
+		{
+			perror("recv:");
+			return -1;
+		}
+		selectedPiece = (int)strtol(buffer,NULL,10);
+
+	}
+	switch(selectedPiece)
+	{
+		case 1:
+		setName(i,j,BISHOP);
+		break;
+		case 2:
+		setName(i,j,KNIGHT);
+		break;
+		case 3:
+		setName(i,j,ROOK);
+		break;
+		case 4:
+		setName(i,j,QUEEN);
+	}
+	return 1;
 }
 
 // add the piece to the captured piece list of the player and update the board

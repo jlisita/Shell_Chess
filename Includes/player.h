@@ -25,6 +25,7 @@ struct Player
 	Color color;
 	Piece* king;
 	char name[SIZENAME];
+	int isPlaying;
 	int isChess;
 	int isMat;
 	int isStalemate;
