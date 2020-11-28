@@ -37,8 +37,10 @@ struct Player
 	char command[10];
 };
 
-int initializePlayer(Player* player, char* name,Color color);
+Player* createPlayer(char* name,Color color);
+int deletePlayer(Player* player);
 ListPieces* createListPiece();
+int deleteListPiece(ListPieces* list);
 int addPiece(ListPieces* list, Piece* piece);
 void printListPieces(ListPieces* list);
 

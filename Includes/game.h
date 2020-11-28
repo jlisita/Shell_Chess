@@ -9,11 +9,11 @@
 #define MAXCOMMANDSIZE 10
 
 
-typedef struct GameData GameData;
-struct GameData
+typedef struct Game Game;
+struct Game
 {
-	Player* player1;
-	Player* player2;
+	Player* player;
+	Player* adversary;
 	char recordedMoves[1000];
 	int endOfGame;
 	Player* currentPlayer;
@@ -25,7 +25,8 @@ int menuMode(int* mode);
 int menuOnline(int* ret, ListProfil* friends);
 int game();
 int localGame();
-int initGame(GameData* gameData);
+Game* createGame();
+int deleteGame(Game* game);
 int turn(Player* player, char* recordedMoves);
 int getCommand(Player* player);
 int verifyCommand(Player* player);

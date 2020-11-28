@@ -162,64 +162,81 @@ int game()
 // initialize board and manage player turn
 int localGame()
 {
-	GameData* gameData = malloc(sizeof(GameData));
+	Game* game = NULL;
 
-	if(initGame(gameData) == -1)
+	game = createGame();
+	if(game == NULL)
 	{
 		return -1;
 	}
 
-	gameData->player1->isPlaying = 1;
-
 	do
 	{
-		if(turn(gameData->currentPlayer,gameData->recordedMoves)==-1)
+		if(turn(game->currentPlayer,game->recordedMoves)==-1)
 		{
 			return -1;
 		}
 
-		gameData->endOfGame = endOfGame(gameData->currentPlayer, gameData->nextPlayer);
+		game->endOfGame = endOfGame(game->currentPlayer, game->nextPlayer);
 
-		if(!gameData->endOfGame)
+		if(!game->endOfGame)
 		{
 			Player* temp = NULL;
-			temp = gameData->currentPlayer;
-			gameData->currentPlayer = gameData->nextPlayer;
-			gameData->nextPlayer = temp;
-			gameData->currentPlayer->isPlaying = 1;
-			gameData->nextPlayer->isPlaying = 0;
+			temp = game->currentPlayer;
+			game->currentPlayer = game->nextPlayer;
+			game->nextPlayer = temp;
+			game->currentPlayer->isPlaying = 1;
+			game->nextPlayer->isPlaying = 0;
 		}
 
-	}while(!gameData->endOfGame);
+	}while(!game->endOfGame);
 
-	free(gameData->player1);
-	free(gameData->player2);
-	free(gameData);
+	deleteGame(game);
+	game = NULL;
 
 	return 0;
 }
 
-int initGame(GameData* gameData)
+Game* createGame()
 {
-	gameData->player1 = malloc(sizeof(Player));
-	gameData->player2 = malloc(sizeof(Player));
-	if(initializePlayer(gameData->player1,"White player",WHITE)==-1)
+	Game* game = malloc(sizeof(Game));
+	if(game == NULL)
 	{
-		return -1;
+		return NULL;
 	}
-	if(initializePlayer(gameData->player2,"Black player",BLACK)==-1)
+	game->player = NULL;
+	game->adversary = NULL;
+	game->player = createPlayer("White player",WHITE);
+	if(game->player == NULL)
 	{
-		return -1;
+		return NULL;
 	}
-	strcpy(gameData->recordedMoves,"");
-	gameData->endOfGame = 0;
-	gameData->currentPlayer = gameData->player1;
-	gameData->nextPlayer = gameData->player2;
+	game->adversary = createPlayer("Black player",BLACK);
+	if(game->adversary == NULL)
+	{
+		return NULL;
+	}
+	strcpy(game->recordedMoves,"");
+	game->endOfGame = 0;
+	game->currentPlayer = game->player;
+	game->nextPlayer = game->adversary;
 
-	if(initializeBoard(gameData->player1,gameData->player2)==-1)
+	if(initializeBoard(game->player,game->adversary)==-1)
+	{
+		return NULL;
+	}
+	return game;
+}
+
+int deleteGame(Game* game)
+{
+	if(game == NULL)
 	{
 		return -1;
 	}
+	deletePlayer(game->player);
+	deletePlayer(game->adversary);
+	free(game);
 	return 0;
 }
 
@@ -420,18 +437,6 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 	Player* currentPlayer = NULL;
 	Player* nextPlayer = NULL;
 
-
-	if((player = malloc(sizeof(Player))) == NULL)
-	{
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
-	if((adversary = malloc(sizeof(Player))) == NULL)
-	{
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
-
 	if(mode==1)
 	{
 		strcpy(ipServeur, myProfil->IPadress);
@@ -450,30 +455,32 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	if(mode == 1)
 	{
-		if(initializePlayer(player,myProfil->name,WHITE)==-1)
+		player = createPlayer(myProfil->name,WHITE);
+		if(player == NULL)
 		{
 			return -1;
 		}
-		if(initializePlayer(adversary,adversaryProfil->name,BLACK)==-1)
+		adversary = createPlayer(adversaryProfil->name,BLACK);
+		if(adversary == NULL)
 		{
 			return -1;
 		}
-		player->isPlaying = 1;
 		currentPlayer = player;
 		nextPlayer = adversary;
 
 	}
 	else
 	{
-		if(initializePlayer(player,myProfil->name,BLACK)==-1)
+		player = createPlayer(myProfil->name,BLACK);
+		if(player == NULL)
 		{
 			return -1;
 		}
-		if(initializePlayer(adversary,adversaryProfil->name,WHITE)==-1)
+		adversary = createPlayer(adversaryProfil->name,WHITE);
+		if(adversary == NULL)
 		{
 			return -1;
 		}
-		adversary->isPlaying = 1;
 		currentPlayer = adversary;
 		nextPlayer = player;
 	}
@@ -511,9 +518,10 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	}while(!gameOver);
 
-
-	free(player);
-	free(adversary);
+	deletePlayer(player);
+	player = NULL;
+	deletePlayer(adversary);
+	adversary = NULL;
 
 	return 0;
 }

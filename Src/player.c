@@ -5,23 +5,37 @@
 #include "game.h"
 #include <time.h>
 
-int initializePlayer(Player* player,char* name,Color color)
+Player* createPlayer(char* name,Color color)
 {
 	int i;
+	Player* player = NULL;
+
+	player = malloc(sizeof(Player));
+	if(player == NULL)
+	{
+		return NULL;
+	}
 	player->color = color;
 	strcpy(player->name,name);
-	player->isPlaying = 0;
 	player->isChess = 0;
 	player->isMat = 0;
 	player->abandonment = 0;
 	player->isStalemate = 0;
 	player->isCastling = 0;
 	player->hasCastled = 0;
+	if(color == WHITE)
+	{
+		player->isPlaying = 1;
+	}
+	else
+	{
+		player->isPlaying = 0;
+	}
 	player->capuredPieces = createListPiece();
 	strcpy(player->command,"");
 	if(player->capuredPieces == NULL )
 	{
-		return -1;
+		return NULL;
 	}
 
 	for(i=0;i<16;i++)
@@ -85,7 +99,8 @@ int initializePlayer(Player* player,char* name,Color color)
 		}
 	}
 	player->king = player->pieces[4];
-	return 0;
+
+	return player;
 
 	error:
 
@@ -94,7 +109,22 @@ int initializePlayer(Player* player,char* name,Color color)
 		free(player->pieces[i]);
 	}
 
-	return -1;
+	return NULL;
+}
+
+int deletePlayer(Player* player)
+{
+	int i;
+	if(player == NULL)
+	{
+		return -1;
+	}
+	for(i=0;i<16;i++)
+	{
+		free(player->pieces[i]);
+	}
+	free(player->capuredPieces);
+	return 1;
 }
 
 ListPieces* createListPiece()
@@ -108,6 +138,25 @@ ListPieces* createListPiece()
 	newList->size=0;
 
 	return newList;
+}
+
+int deleteListPiece(ListPieces* list)
+{
+	Element* toRemove = NULL;
+	if(list==NULL)
+	{
+		return -1;
+	}
+	while(list->size>0)
+	{
+		toRemove = list->first;
+		list->first = list->first->next;
+		free(toRemove);
+		list->size--;
+	}
+	free(list);
+
+	return 0;
 }
 
 int addPiece(ListPieces* list, Piece* piece)
