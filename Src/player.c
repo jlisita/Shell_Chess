@@ -13,6 +13,7 @@ Player* createPlayer(char* name,Color color)
 	player = malloc(sizeof(Player));
 	if(player == NULL)
 	{
+		perror("malloc");
 		return NULL;
 	}
 	player->color = color;
@@ -31,10 +32,11 @@ Player* createPlayer(char* name,Color color)
 	{
 		player->isPlaying = 0;
 	}
-	player->capuredPieces = createListPiece();
 	strcpy(player->command,"");
+	player->capuredPieces = createListPiece();
 	if(player->capuredPieces == NULL )
 	{
+		fprintf(stderr,"createListPiece returned error\n");
 		return NULL;
 	}
 
@@ -48,6 +50,7 @@ Player* createPlayer(char* name,Color color)
 		player->pieces[i] = malloc(sizeof(Piece));
 		if(player->pieces[i] == NULL)
 		{
+			perror("malloc");
 			goto error;
 		}
 	}
@@ -132,6 +135,7 @@ ListPieces* createListPiece()
 	ListPieces* newList = malloc(sizeof(ListPieces));
 	if (newList==NULL)
 	{
+		perror("malloc");
 		return NULL;
 	}
 	newList->first=NULL;
@@ -165,6 +169,7 @@ int addPiece(ListPieces* list, Piece* piece)
 	Element* ptrEl= NULL;
 	if(newElement==NULL || list==NULL || piece==NULL)
 	{
+		perror("malloc");
 		return -1;
 	}
 	newElement->value=piece;
@@ -189,12 +194,12 @@ int addPiece(ListPieces* list, Piece* piece)
 	return 0;
 }
 
-void printListPieces(ListPieces* list)
+int printListPieces(ListPieces* list)
 {
 	Element* ptrEl= NULL;
 	if(list==NULL)
 	{
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	else
 	{
@@ -208,6 +213,7 @@ void printListPieces(ListPieces* list)
 		}
 		printf("\n");
 	}
+	return 0;
 
 }
 

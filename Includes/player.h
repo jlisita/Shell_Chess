@@ -42,6 +42,6 @@ int deletePlayer(Player* player);
 ListPieces* createListPiece();
 int deleteListPiece(ListPieces* list);
 int addPiece(ListPieces* list, Piece* piece);
-void printListPieces(ListPieces* list);
+int printListPieces(ListPieces* list);
 
 #endif

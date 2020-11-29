@@ -31,7 +31,6 @@ int turn(Player* player, char* recordedMoves);
 int getCommand(Player* player);
 int verifyCommand(Player* player);
 int nextMovement(Player* player, int* i, int* j, int* k, int* l, int* captured1, int*captured2);
-int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int captured2);
 int endOfGame(Player* player1, Player* player2);
 void updateRecordedMoves(Player* player, char* recordedMoves);
 int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode);

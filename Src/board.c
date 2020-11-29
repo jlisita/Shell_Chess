@@ -2,16 +2,31 @@
 #include <stdlib.h>
 #include "board.h"
 
+
+// test if the board contain the square (i,j)
+int existSquare(int i, int j)
+{
+	if( i < 0 || j < 0 ||  i > 7 || j > 7 )
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
 // test if the piece can be moved
 int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int* captured2, int isTestChess, int isTestMat)
 {
-	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
-	{
-		exit (-1);
-	}
 	int allowedMovement = 0;
 	int isEnPassantCapture = 0;
 	Piece* tempPiece = NULL;
+
+	if(!existSquare(i,j) || !existSquare(k,l))
+	{
+		return -1;
+	}
 	if(isEmptySquare(i,j))
 	{
 		if(!isTestChess && !isTestMat)
@@ -87,6 +102,11 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 		setI(cb.array[k][l].piece, k, cb.counterMove);
 		setJ(cb.array[k][l].piece, l, cb.counterMove);
 		chess = testChess(player);
+		if(chess == -1)
+		{
+			fprintf(stderr,"testChess returned error\n");
+			return -1;
+		}
 		if(chess && !isTestMat)
 		{
 			printf("This move would lead to chess\n");
@@ -151,7 +171,7 @@ int testCastling(Player* player, int i, int j, int k, int l)
 // update the board with new position of the piece
 int movePiece(int i, int j, int k, int l)
 {
-	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
+	if(!existSquare(i,j) || !existSquare(k,l) || isEmptySquare(i,j))
 	{
 		return -1;
 	}
@@ -160,13 +180,14 @@ int movePiece(int i, int j, int k, int l)
 	cb.array[k][l].isOccupied = 1;
 	cb.array[i][j].piece = NULL;
 	cb.array[i][j].isOccupied = 0;
+
 	return 0;
 }
 
 // execute castle movement
 int castling(int i, int j, int k, int l)
 {
-	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
+	if(!existSquare(i,j) || !existSquare(k,l))
 	{
 		return -1;
 	}
@@ -202,6 +223,10 @@ int castling(int i, int j, int k, int l)
 // return 1 and change piece name if the pawn can be promoted
 int promotion(int i, int j)
 {
+	if(!existSquare(i,j))
+	{
+		return -1;
+	}
 	int selectedPiece = 0;
 	if(getName(i,j)!=PAWN || (i!=7 && getColor(i,j)== WHITE) || (i!=1 && getColor(i,j)== BLACK))
 	{
@@ -239,6 +264,10 @@ int promotion(int i, int j)
 
 int promotionOnline(Player* player, int i, int j, int socket)
 {
+	if(!existSquare(i,j))
+	{
+		return -1;
+	}
 	int selectedPiece = 0;
 	char buffer[10] ="";
 	if(getName(i,j)!=PAWN || (i!=7 && getColor(i,j)== WHITE) || (i!=1 && getColor(i,j)== BLACK))
@@ -296,7 +325,7 @@ int promotionOnline(Player* player, int i, int j, int socket)
 // add the piece to the captured piece list of the player and update the board
 int capturePiece(Player* player,int k,int l)
 {
-	if(addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
+	if(!existSquare(k,l) || isEmptySquare(k,l) || addPiece(player->capuredPieces, cb.array[k][l].piece)==-1)
 	{
 		return -1;
 	}
@@ -307,7 +336,7 @@ int capturePiece(Player* player,int k,int l)
 }
 
 // update the new position of all pieces according to position on board
-void updatePosition( int counterMove)
+void updatePosition(int counterMove)
 {
 	int i, j;
 	for(i=0;i<8;i++)
@@ -323,22 +352,76 @@ void updatePosition( int counterMove)
 	}
 }
 
+// Update square of the board and position od the pieces
+int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int captured2)
+{
+	if(!existSquare(i,j) || !existSquare(k,l) || isEmptySquare(i,j))
+	{
+		return -1;
+	}
+	if(!(player->isCastling))
+    {
+    	if(!isEmptySquare(captured1,captured2))
+		{
+			if(capturePiece(player,captured1,captured2)==-1)
+			{
+				fprintf(stderr,"capturePiece returned error\n");
+				return -1;
+			}
+		}
+		if(movePiece(i,j,k,l) == -1)
+		{
+			fprintf(stderr,"movePiece returned error\n");
+			return -1;
+		}
+    }
+    else
+    {
+    	if(castling(i,j,k,l) == -1)
+    	{
+    		fprintf(stderr,"castling returned error\n");
+    		return -1;
+    	}
+    	player->isCastling = 0;
+    	player->hasCastled = 1;
+    }
+    updatePosition(cb.counterMove);
+    return 0;
+}
+
 // test if the king of player can be captured by the adversary
 int testChess(Player* player)
 {
-	return canBeEaten(player, player->king->i[cb.counterMove], player->king->j[cb.counterMove]);
+	int ret;
+
+	ret = canBeEaten(player, player->king->i[cb.counterMove], player->king->j[cb.counterMove]);
+	if(ret == -1)
+	{
+		fprintf(stderr,"canBeEaten returned error\n");
+		return -1;
+	}
+	return ret;
 }
 
 // test if the Piece on the position (k,l) of player can be captured by the adversary
 int canBeEaten(Player* player, int k, int l)
 {
-	int i,j;
-
+	int i,j,ret;
+	if(!existSquare(k,l) || isEmptySquare(k,l))
+	{
+		return -1;
+	}
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<8;j++)
 		{
-			if(canMovePiece(player,i,j,k,l,NULL,NULL,1,0))
+			ret = canMovePiece(player,i,j,k,l,NULL,NULL,1,0);
+			if(ret == -1)
+			{
+				fprintf(stderr,"canMovePiece returned error\n");
+				return -1;
+			}
+			else if(ret == 1)
 			{
 				return 1;
 			}
@@ -351,6 +434,7 @@ int canBeEaten(Player* player, int k, int l)
 int canDoLegalMove(Player* player)
 {
 	int i,j,k,l,m=0,n=0;
+	int ret;
 	Color color = player->color;
 
 	for(i=0;i<8;i++)
@@ -363,7 +447,13 @@ int canDoLegalMove(Player* player)
 				{
 					for(l=0;l<8;l++)
 					{
-						if(canMovePiece(player,i,j,k,l,&m,&n,0,1))
+						ret = canMovePiece(player,i,j,k,l,&m,&n,0,1);
+						if(ret == -1)
+						{
+							fprintf(stderr,"canMovePiece returned error\n");
+							return -1;
+						}
+						else if(ret == 1)
 						{
 							return 1;
 						}
@@ -377,23 +467,36 @@ int canDoLegalMove(Player* player)
 
 Piece* getPiece(int i, int j)
 {
+	if(!existSquare(i,j) || isEmptySquare(i,j))
+	{
+		return NULL;
+	}
 	return cb.array[i][j].piece;
 }
 
 Name getName(int i, int j)
 {
+	if(!existSquare(i,j) && isEmptySquare(i,j))
+	{
+		return -1;
+	}
 	return getPiece(i,j)->name;
 }
 
-void setName(int i, int j, Name name)
+int setName(int i, int j, Name name)
 {
+	if(!existSquare(i,j) && isEmptySquare(i,j))
+	{
+		return -1;
+	}
 	getPiece(i,j)->name = name;
+	return 0;
 }
 
 // test is the square doesn't contain piece.
 int isEmptySquare(int i,int j)
 {
-	if( i < 0|| j < 0 || i > 7 || j > 7 )
+	if(!existSquare(i,j))
 	{
 		return -1;
 	}
@@ -403,11 +506,12 @@ int isEmptySquare(int i,int j)
 // test if all square between initial position and final position are empty
 int isEmptyBetween(int i, int j, int k, int l)
 {
-	int n,m;
-	if( i < 0 || j < 0 || k < 0 || l < 0 || i > 7 || j > 7 || k > 7 || l > 7 )
+	if(!existSquare(i,j) || !existSquare(k,l))
 	{
 		return -1;
 	}
+	int n,m;
+
 	if(k-i==0) // horizontal move
 	{
 		if(l-j>0) // from left to right
@@ -508,7 +612,7 @@ int isEmptyBetween(int i, int j, int k, int l)
 
 Color getColor(int i, int j)
 {
-	if( i < 0|| j < 0 || i > 7 || j > 7 )
+	if( !existSquare(i,j) || isEmptySquare(i,j) )
 	{
 		return -1;
 	}

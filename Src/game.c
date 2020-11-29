@@ -87,6 +87,7 @@ int game()
 		{
 			if(localGame(NULL,NULL)==-1)
 			{
+				fprintf(stderr,"localGame returned error\n");
 				return -1;
 			}
 		}
@@ -96,6 +97,7 @@ int game()
 			Profil* adversaryProfil = NULL;
 			if((myProfil = malloc(sizeof(Profil))) == NULL)
 			{
+				perror("malloc");
 				return -1;
 			}
 			if(loadProfil(myProfil) == -1)
@@ -104,11 +106,13 @@ int game()
 				{
 					if(createProfil(myProfil)==-1)
 					{
+						fprintf(stderr,"createProfil returned error\n");
 						return -1;
 					}
 				}
 				else
 				{
+					fprintf(stderr,"loadProfil returned error\n");
 					return -1;
 				}
 			}
@@ -116,12 +120,14 @@ int game()
 			{
 				if(menuOnline(&ret,myProfil->friends) == -1)
 				{
+					fprintf(stderr,"menuOnline returned error\n");
 					return -1;
 				}
 				if(ret == 0)
 				{
 					if(addFriends(myProfil)==-1)
 					{
+						fprintf(stderr,"addFriends returned error\n");
 						return -1;
 					}
 				}
@@ -138,6 +144,7 @@ int game()
 			}
 			if(onlineGame(myProfil,adversaryProfil,ret)==-1)
 			{
+				fprintf(stderr,"onlineGame returned error\n");
 				return -1;
 			}
 		}
@@ -164,20 +171,26 @@ int localGame()
 {
 	Game* game = NULL;
 
-	game = createGame();
-	if(game == NULL)
+	if((game = createGame()) == NULL )
 	{
+		fprintf(stderr,"createGame returned error\n");
 		return -1;
 	}
 
 	do
 	{
-		if(turn(game->currentPlayer,game->recordedMoves)==-1)
+		if(turn(game->currentPlayer,game->recordedMoves) == -1)
 		{
+			fprintf(stderr,"turn returned error\n");
 			return -1;
 		}
 
 		game->endOfGame = endOfGame(game->currentPlayer, game->nextPlayer);
+		if(game->endOfGame == -1)
+		{
+			fprintf(stderr,"endOfGame returned error\n");
+			return -1;
+		}
 
 		if(!game->endOfGame)
 		{
@@ -202,6 +215,7 @@ Game* createGame()
 	Game* game = malloc(sizeof(Game));
 	if(game == NULL)
 	{
+		perror("malloc");
 		return NULL;
 	}
 	game->player = NULL;
@@ -209,11 +223,13 @@ Game* createGame()
 	game->player = createPlayer("White player",WHITE);
 	if(game->player == NULL)
 	{
+		fprintf(stderr,"createPlayer returned error\n");
 		return NULL;
 	}
 	game->adversary = createPlayer("Black player",BLACK);
 	if(game->adversary == NULL)
 	{
+		fprintf(stderr,"createPlayer returned error\n");
 		return NULL;
 	}
 	strcpy(game->recordedMoves,"");
@@ -223,6 +239,7 @@ Game* createGame()
 
 	if(initializeBoard(game->player,game->adversary)==-1)
 	{
+		fprintf(stderr,"initializeBoard returned error\n");
 		return NULL;
 	}
 	return game;
@@ -265,12 +282,18 @@ int turn(Player* player, char* recordedMoves)
 		}
 
 		validMovement = nextMovement(player, &i, &j, &k, &l, &captured1, &captured2);
+		if(validMovement == -1)
+		{
+			fprintf(stderr,"nextMovement returned error\n");
+			return -1;
+		}
 
 	}while(!validMovement);
 
 	cb.counterMove++;
     if(updateBoard(player, i, j, k, l, captured1, captured2)==-1)
     {
+    	fprintf(stderr,"updateBoard returned error\n");
     	return -1;
     }
     if(!player->isCastling)
@@ -338,33 +361,14 @@ int nextMovement(Player* player, int* i, int* j, int* k, int* l, int* captured1,
 	if(!player->isCastling)
 	{
 		validMovement = canMovePiece(player,*i,*j,*k,*l,captured1,captured2,0,0);
+		if(validMovement == -1)
+		{
+			fprintf(stderr,"canMovePiece returned error\n");
+			return -1;
+		}
 	}
 
 	return validMovement;
-}
-
-// Update square of the board and position od the pieces
-int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int captured2)
-{
-	if(!(player->isCastling))
-    {
-    	if(!isEmptySquare(captured1,captured2))
-		{
-			if(capturePiece(player,captured1,captured2)==-1)
-			{
-				return -1;
-			}
-		}
-		movePiece(i,j,k,l);
-    }
-    else
-    {
-    	castling(i,j,k,l);
-    	player->isCastling = 0;
-    	player->hasCastled = 1;
-    }
-    updatePosition(cb.counterMove);
-    return 0;
 }
 
 // update list of moves during the match
@@ -391,7 +395,17 @@ int endOfGame(Player* currentPlayer, Player* nextPlayer)
 		int legalMove = 0;
 		int chess = 0;
 		legalMove = canDoLegalMove(nextPlayer);
+		if(legalMove == -1)
+		{
+			fprintf(stderr,"legalMove returned error\n");
+			return -1;
+		}
 		chess = testChess(nextPlayer);
+		if(chess == -1)
+		{
+			fprintf(stderr,"testChess returned error\n");
+			return -1;
+		}
 
 		if(chess)
 		{
@@ -458,11 +472,13 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 		player = createPlayer(myProfil->name,WHITE);
 		if(player == NULL)
 		{
+			fprintf(stderr,"createPlayer returned error\n");
 			return -1;
 		}
 		adversary = createPlayer(adversaryProfil->name,BLACK);
 		if(adversary == NULL)
 		{
+			fprintf(stderr,"createPlayer returned error\n");
 			return -1;
 		}
 		currentPlayer = player;
@@ -474,11 +490,13 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 		player = createPlayer(myProfil->name,BLACK);
 		if(player == NULL)
 		{
+			fprintf(stderr,"createPlayer returned error\n");
 			return -1;
 		}
 		adversary = createPlayer(adversaryProfil->name,WHITE);
 		if(adversary == NULL)
 		{
+			fprintf(stderr,"createPlayer returned error\n");
 			return -1;
 		}
 		currentPlayer = adversary;
@@ -487,6 +505,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	if(initializeBoard(player,adversary)==-1)
 	{
+		fprintf(stderr,"initializeBoard returned error\n");
 		return -1;
 	}
 
@@ -501,10 +520,16 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 		if(turnOnline(currentPlayer, player->isPlaying, recordedMoves, socketClient)==-1)
 		{
+			fprintf(stderr,"turnOnline returned error\n");
 			return -1;
 		}
 
 		gameOver = endOfGame(currentPlayer, nextPlayer);
+		if(gameOver == -1)
+		{
+			fprintf(stderr,"turnOnline returned error\n");
+			return -1;
+		}
 
 		if(!gameOver)
 		{
@@ -529,6 +554,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 int turnOnline(Player* currentPlayer, int isPlaying, char* recordedMoves, int socketClient)
 {
 	int i=0,j=0,k=0,l=0;
+	int ret;
 	int captured1=0, captured2=0;
 	int validMovement=0;
 
@@ -574,18 +600,27 @@ int turnOnline(Player* currentPlayer, int isPlaying, char* recordedMoves, int so
 			return 0;
 		}
 
-		nextMovement(currentPlayer, &i, &j, &k, &l, &captured1, &captured2);
+		ret = nextMovement(currentPlayer, &i, &j, &k, &l, &captured1, &captured2);
+		if(ret == -1)
+		{
+			fprintf(stderr,"nextMovement returned error\n");
+		}
 
 	}
 
 	cb.counterMove++;
     if(updateBoard(currentPlayer, i, j, k, l, captured1, captured2)==-1)
     {
+    	fprintf(stderr,"updateBoard returned error\n");
     	return -1;
     }
     if(!currentPlayer->isCastling)
     {
-    	promotionOnline(currentPlayer,k,l,socketClient);
+    	if(promotionOnline(currentPlayer,k,l,socketClient) == -1)
+    	{
+    		fprintf(stderr,"nextMovement returned error\n");
+    		return -1;
+    	}
     }
 	updateRecordedMoves(currentPlayer,recordedMoves);
 
@@ -738,6 +773,7 @@ int readString(char* string, int sizeMax)
 	}
 	else
 	{
+		perror("fgets");
 		freeBuffer();
 		return -1;
 	}
@@ -754,6 +790,7 @@ int readInt(int* nbr )
 	}
 	else
 	{
+		perror("fgets");
 		return -1;
 	}
 }
