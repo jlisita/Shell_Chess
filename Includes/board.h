@@ -4,6 +4,7 @@
 #include "piece.h"
 #include "player.h"
 #include "game.h"
+#include "cmd_interface.h"
 
 typedef struct Square Square;
 struct Square

@@ -20,10 +20,6 @@ struct Game
 	Player* nextPlayer;
 };
 
-
-int menuMode(int* mode);
-int menuOnline(int* ret, ListProfil* friends);
-int game();
 int localGame();
 Game* createGame();
 int deleteGame(Game* game);
@@ -36,8 +32,5 @@ void updateRecordedMoves(Player* player, char* recordedMoves);
 int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode);
 int turnOnline(Player* currentPlayer, int isPlaying, char* recordedMoves, int socketClient);
 int connexion(char* ipServeur, char* ipClient, int mode, int* socketServeur, int* socketClient, struct sockaddr_in* sinServeur, struct sockaddr_in* sinClient);
-int readString(char* string, int sizeMax);
-int readInt();
-void freeBuffer();
 
 #endif

@@ -236,12 +236,7 @@ int promotion(int i, int j)
 	{
 		do
 		{
-			printf("Choose the new piece\n");
-			printf("1. Bishop\n");
-			printf("2. Knight\n");
-			printf("3. Rook\n");
-			printf("4. Queen\n");
-			readInt(&selectedPiece);
+			menuCasling(&selectedPiece);
 
 		}while(selectedPiece < 1 || selectedPiece > 4 );
 		switch(selectedPiece)
@@ -278,12 +273,7 @@ int promotionOnline(Player* player, int i, int j, int socket)
 	{
 		do
 		{
-			printf("Choose the new piece\n");
-			printf("1. Bishop\n");
-			printf("2. Knight\n");
-			printf("3. Rook\n");
-			printf("4. Queen\n");
-			readInt(&selectedPiece);
+			menuCasling(&selectedPiece);
 
 		}while(selectedPiece < 1 || selectedPiece > 4 );
 

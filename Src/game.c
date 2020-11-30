@@ -9,69 +9,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "game.h"
+#include "cmd_interface.h"
 
 #define PORT 1025
-
-
-int menuMode(int* mode)
-{
-	printf("Select mode:\n");
-	printf(" 1. Local\n");
-	printf(" 2. Online\n");
-	do
-	{
-		if(readInt(mode)==-1)
-		{
-			return -1;
-		}
-		if(*mode != 1 && *mode != 2)
-		{
-			printf("Invalid number: enter 1 or 2");
-		}
-
-	}while(*mode !=1 && *mode != 2);
-	return 0;
-}
-
-int menuOnline(int* ret, ListProfil* friends)
-{
-	printf("Select a friend\n");
-	printf(" 0. Add a friend\n");
-	printListProfil(friends);
-	do
-	{
-		if(readInt(ret)==-1)
-		{
-			return -1;
-		}
-		if(*ret < 0 || *ret > friends->size)
-		{
-			printf("Invalid number\n");
-		}
-
-	}while(*ret < 0 || *ret > friends->size);
-	return 0;
-}
-
-int menuColor(int* ret)
-{
-	printf("Select color:\n");
-	printf(" 1. White\n");
-	printf(" 2. Black\n");
-	do
-	{
-		if(readInt(ret)==-1)
-		{
-			return -1;
-		}
-		if(*ret != 1 && *ret != 2)
-		{
-			printf("Invalid number: enter 1 or 2");
-		}
-
-	}while(*ret !=1 && *ret != 2);
-	return 0;
-}
 
 int game()
 {
@@ -624,7 +564,6 @@ int turnOnline(Player* currentPlayer, int isPlaying, char* recordedMoves, int so
     }
 	updateRecordedMoves(currentPlayer,recordedMoves);
 
-
 	return 0;
 }
 
@@ -748,59 +687,7 @@ int connexion(char* ipServeur, char*ipClient, int mode, int* socketServeur, int*
 				printf("Connection accepted\n");
 			}
 		}
-
 	}
 
 	return 0;
-}
-
-// store string enter in console
-int readString(char* string, int sizeMax)
-{
-	char* posCR = NULL;
-	if(fgets(string,sizeMax,stdin)!=NULL)
-	{
-		posCR = strchr(string,'\n');
-		if(posCR != NULL )
-		{
-			*posCR = '\0';
-		}
-		else
-		{
-			freeBuffer();
-		}
-		return 0;
-	}
-	else
-	{
-		perror("fgets");
-		freeBuffer();
-		return -1;
-	}
-}
-
-// store integer entered in console
-int readInt(int* nbr )
-{
-	char string[100]="";
-	if(fgets(string,100,stdin)!=NULL)
-	{
-		*nbr = (int) strtol(string,NULL,10);
-		return 0;
-	}
-	else
-	{
-		perror("fgets");
-		return -1;
-	}
-}
-
-// remove data from stdin buffer
-void freeBuffer()
-{
-	int c = 0;
-	do
-	{
-		c = getchar();
-	}while(c!='\n' && c!=EOF);
 }
