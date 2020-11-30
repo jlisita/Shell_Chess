@@ -21,7 +21,7 @@ struct ChessBoard
 }cb;
 
 int initializeBoard(Player* player1, Player* player2);
-void printfBoard(Color player);
+void printBoard(Color player);
 int rankIndexToInt(char c);
 int fileIndexToInt(char c);
 Piece* getPiece(int i, int j);

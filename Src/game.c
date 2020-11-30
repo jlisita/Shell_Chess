@@ -119,6 +119,8 @@ int localGame()
 
 	do
 	{
+		printGame(game->currentPlayer, game->nextPlayer, game->recordedMoves);
+
 		if(turn(game->currentPlayer,game->recordedMoves) == -1)
 		{
 			fprintf(stderr,"turn returned error\n");
@@ -144,6 +146,7 @@ int localGame()
 
 	}while(!game->endOfGame);
 
+	printGame(game->currentPlayer, game->nextPlayer, game->recordedMoves);
 	deleteGame(game);
 	game = NULL;
 
@@ -203,10 +206,6 @@ int turn(Player* player, char* recordedMoves)
 	int i,j,k,l;
 	int captured1=0, captured2=0;
 	int validMovement=0;
-	printfBoard(player->color);
-	printf("%s\n",recordedMoves);
-	printf("Pieces captured: ");
-	printListPieces(player->capuredPieces);
 
 	do
 	{
@@ -361,7 +360,6 @@ int endOfGame(Player* currentPlayer, Player* nextPlayer)
 
 	if(nextPlayer->isMat)
 	{
-		printfBoard(currentPlayer->color);
 		printf("End of game %s has won by Mat.\n\n",currentPlayer->name);
 		return 1;
 	}
@@ -451,12 +449,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	do
 	{
-		printfBoard(currentPlayer->color);
-		printf("%s\n",recordedMoves);
-		printf("Pieces captured by you: ");
-		printListPieces(player->capuredPieces);
-		printf("Pieces captured by %s: ",adversary->name);
-		printListPieces(adversary->capuredPieces);
+		printGame(currentPlayer, nextPlayer, recordedMoves);
 
 		if(turnOnline(currentPlayer, player->isPlaying, recordedMoves, socketClient)==-1)
 		{
@@ -483,6 +476,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	}while(!gameOver);
 
+	printGame(currentPlayer, nextPlayer, recordedMoves);
 	deletePlayer(player);
 	player = NULL;
 	deletePlayer(adversary);
@@ -691,3 +685,13 @@ int connexion(char* ipServeur, char*ipClient, int mode, int* socketServeur, int*
 
 	return 0;
 }
+ void printGame(Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
+ {
+ 	printf("%s\n",recordedMoves);
+	printf("Pieces captured by you: ");
+	printListPieces(currentPlayer->capuredPieces);
+	printf("Pieces captured by %s: ",nextPlayer->name);
+	printListPieces(nextPlayer->capuredPieces);
+	printBoard(currentPlayer->color);
+ }
+

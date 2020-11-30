@@ -738,7 +738,7 @@ int initializeBoard(Player* player1, Player* player2)
 
 
 // print board in console
-void printfBoard(Color player)
+void printBoard(Color player)
 {
 
 	int i,j;

@@ -32,5 +32,6 @@ void updateRecordedMoves(Player* player, char* recordedMoves);
 int onlineGame(Profil* myProfil, Profil* adversaryProfil,int mode);
 int turnOnline(Player* currentPlayer, int isPlaying, char* recordedMoves, int socketClient);
 int connexion(char* ipServeur, char* ipClient, int mode, int* socketServeur, int* socketClient, struct sockaddr_in* sinServeur, struct sockaddr_in* sinClient);
+ void printGame(Player* player, Player* adversary, char* recorderMoves);
 
 #endif
