@@ -37,6 +37,7 @@ int testChess(Player* player);
 int canDoLegalMove(Player* Player);
 int testCastling(Player* player, int i, int j, int k, int l);
 int canMovePiece(Player* player, int i, int j, int k, int l, int* m, int* n, int isTestChess, int isTestMat);
+int isCapturingPiece(Color playerColor, int i, int j);
 int movePiece(int i, int j, int k, int l);
 int castling(int i, int j, int k, int l);
 void updatePosition( int counterMove);

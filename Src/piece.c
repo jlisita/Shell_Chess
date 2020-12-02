@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include "board.h"
 
-
-
 int getI(Piece* piece, int counterMove)
 {
 	return piece->i[counterMove];
@@ -66,11 +64,22 @@ int canMoveKing(int i, int j, int k, int l)
 	return 0;
 }
 
-// test if the queen can be moved
-int canMoveQueen(int i, int j, int k, int l)
+// test if the king can be moved
+int kingMovement(int i, int j, int k, int l)
 {
-	if(isEmptyBetween(i,j,k,l)
-		&& ( (k-i==l-j) || (k-i==j-l) || (k-i==0) || (l-j==0) ) )
+	if( ( (k-i==1) &&  ( (j==l) || (l-j==1) || (l-j==-1) ) )
+	||  ( (k-i==-1) && ( (j==l) || (l-j==1) || (l-j==-1) ) )
+	||  ( (k-i==0) && ( (l-j==1) || (l-j==-1) ) ) )
+	{
+		return 1;
+	}
+	return 0;
+}
+
+// test if the queen can be moved
+int queenMovement(int i, int j, int k, int l)
+{
+	if( (k-i==l-j) || (k-i==j-l) || (k-i==0) || (l-j==0) )
 	{
 		return 1;
 	}
@@ -78,10 +87,9 @@ int canMoveQueen(int i, int j, int k, int l)
 }
 
 // test if the bishop can be moved
-int canMoveBishop(int i, int j, int k, int l)
+int bishopMovement(int i, int j, int k, int l)
 {
-	if(isEmptyBetween(i,j,k,l)
-	&&  ( (k-i==l-j) || (k-i==j-l) ) )
+	if( (k-i==l-j) || (k-i==j-l) )
 	{
 		return 1;
 	}
@@ -89,10 +97,9 @@ int canMoveBishop(int i, int j, int k, int l)
 }
 
 // test if the rook can be moved
-int canMoveRook(int i, int j, int k, int l)
+int rookMovement(int i, int j, int k, int l)
 {
-	if(isEmptyBetween(i,j,k,l)
-	&&  ( (k-i==0) || (l-j==0) ))
+	if( (k-i==0) || (l-j==0) )
 	{
 		return 1;
 	}
@@ -100,7 +107,7 @@ int canMoveRook(int i, int j, int k, int l)
 }
 
 // test if the knigth can be moved
-int canMoveKnight(int i, int j, int k, int l)
+int knightMovement(int i, int j, int k, int l)
 {
 
 	if  ( ( (k-i==2) && ( (l-j==1) || (l-j==-1) ) ) || ( (k-i==-2) && ( (l-j==1) || (l-j==-1) ) )
@@ -112,28 +119,70 @@ int canMoveKnight(int i, int j, int k, int l)
 }
 
 // test if the pawn can be moved
-int canMovePawn(int i, int j, int k, int l)
+int pawnMovement(int i, int j, int k, int l, Color color, int isCapturing)
 {
-	if(getColor(i,j) == WHITE)
-	{
-		if( ( (i==1) && (j==l) && (k-i==2) && isEmptySquare(i+1,l) && isEmptySquare(k,l) )
-	    || ( (j==l) && (k-i == 1) && isEmptySquare(k,l) )
-	    || ( (k==i+1) && ((l==j+1) || (l==j-1)) && !isEmptySquare(k,l) && (getColor(k,l)==BLACK) ) )
+	if(color == WHITE)
+		{
+		if(isCapturing && whitePawnCaptureMovement(i, j, k, l))
+		{
+			return 1;
+		}
+		else if(!isCapturing && whitePawnStraightMovement(i, j, k, l))
 		{
 			return 1;
 		}
 	}
 	else
 	{
-		if( ( (i==6) && (j==l) && (k-i==-2) && isEmptySquare(i-1,l) && isEmptySquare(k,l) )
-		|| ( (j==l) && (k-i==-1) && isEmptySquare(k,l) )
-		|| ( (k==i-1) && ((l==j-1) || (l==j+1)) && !isEmptySquare(k,l) && (getColor(k,l)==WHITE) ) )
+		if(isCapturing && blackPawnCaptureMovement(i, j, k, l))
+		{
+			return 1;
+		}
+		else if(!isCapturing && blackPawnStraightMovement(i, j, k, l))
 		{
 			return 1;
 		}
 	}
+		return 0;
+}
+
+int whitePawnStraightMovement(int i, int j, int k, int l)
+{
+	if( ( (i==1) && (j==l) && (k-i==2))
+    || ( (j==l) && (k-i == 1) ) )
+	{
+		return 1;
+	}
 	return 0;
 
+}
+
+int whitePawnCaptureMovement(int i, int j, int k, int l)
+{
+	if( (k==i+1) && ((l==j+1) || (l==j-1)) )
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int blackPawnStraightMovement(int i, int j, int k, int l)
+{
+	if( ( (i==6) && (j==l) && (k-i==-2) )
+	|| ( (j==l) && (k-i==-1) ) )
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int blackPawnCaptureMovement(int i, int j, int k, int l)
+{
+	if( (k==i-1) && ((l==j-1) || (l==j+1)) )
+	{
+		return 1;
+	}
+	return 0;
 }
 
 int enPassantCapture(int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture)

@@ -36,12 +36,16 @@ void setI(Piece* piece, int i, int counterMove);
 void setJ(Piece* piece, int j, int counterMove);
 void printfPiece(Piece* piece);
 int hasMoved(Piece* piece, int counterMove);
-int canMoveKing(int i, int j, int k, int l);
-int canMoveQueen(int i, int j, int k, int l);
-int canMoveBishop(int i, int j, int k, int l);
-int canMoveRook(int i, int j, int k, int l);
-int canMoveKnight(int i, int j, int k, int l);
-int canMovePawn(int i, int j, int k, int l);
+int kingMovement(int i, int j, int k, int l);
+int queenMovement(int i, int j, int k, int l);
+int bishopMovement(int i, int j, int k, int l);
+int rookMovement(int i, int j, int k, int l);
+int knightMovement(int i, int j, int k, int l);
+int pawnMovement(int i, int j, int k, int l, Color color, int isCapturing);
+int whitePawnStraightMovement(int i, int j, int k, int l);
+int whitePawnCaptureMovement(int i, int j, int k, int l);
+int blackPawnStraightMovement(int i, int j, int k, int l);
+int blackPawnCaptureMovement(int i, int j, int k, int l);
 int enPassantCapture(int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture);
 
 

@@ -37,11 +37,21 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 	}
 
 	Piece* piece = cb.array[i][j].piece;
+
 	if( ((getColor(i,j) != player->color) && !isTestChess) || ( (getColor(i,j) == player->color)  && isTestChess))
 	{
 		if(!isTestChess && !isTestMat)
 		{
 			printf("Can't move this piece\n");
+		}
+		return 0;
+	}
+
+	if(piece->name != KNIGHT && !isEmptyBetween(i,j,k,l))
+	{
+		if(!isTestChess && !isTestMat)
+		{
+			printf("A piece is blocking the movement\n");
 		}
 		return 0;
 	}
@@ -58,22 +68,23 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 	switch(piece->name)
 	{
 		case KING:
-			allowedMovement = canMoveKing(i,j,k,l);
+			allowedMovement = kingMovement(i,j,k,l);
 			break;
 		case QUEEN:
-			allowedMovement = canMoveQueen(i,j,k,l);
+			allowedMovement = queenMovement(i,j,k,l);
 			break;
 		case BISHOP:
-			allowedMovement = canMoveBishop(i,j,k,l);
+			allowedMovement = bishopMovement(i,j,k,l);
 			break;
 		case ROOK:
-			allowedMovement = canMoveRook(i,j,k,l);
+			allowedMovement = rookMovement(i,j,k,l);
 			break;
 		case KNIGHT:
-			allowedMovement = canMoveKnight(i,j,k,l);
+			allowedMovement = knightMovement(i,j,k,l);
 			break;
 		case PAWN:
-			allowedMovement = (canMovePawn(i,j,k,l) || enPassantCapture(i,j,k,l,captured1,captured2,&isEnPassantCapture));
+			allowedMovement = ( pawnMovement(i,j,k,l,piece->color,isCapturingPiece(piece->color,k,l))
+				|| enPassantCapture(i,j,k,l,captured1,captured2, &isEnPassantCapture));
 			break;
 	}
 
@@ -126,6 +137,16 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 	{
 		return 1;
 	}
+}
+
+// test is the case is occupied by a piece of the other player
+int isCapturingPiece(Color playerColor, int i, int j)
+{
+	if( !isEmptySquare(i,j) && (getColor(i,j) != playerColor) )
+	{
+		return 1;
+	}
+	return 0;
 }
 
 // test if the castle movement is possible
@@ -382,6 +403,7 @@ int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int c
 // test if the king of player can be captured by the adversary
 int testChess(Player* player)
 {
+	printf("test chess\n");
 	int ret;
 
 	ret = canBeEaten(player, player->king->i[cb.counterMove], player->king->j[cb.counterMove]);
@@ -413,6 +435,7 @@ int canBeEaten(Player* player, int k, int l)
 			}
 			else if(ret == 1)
 			{
+				printf("can move %d %d to %d %d\n",i,j,k,l);
 				return 1;
 			}
 		}
