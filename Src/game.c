@@ -284,6 +284,7 @@ int nextMovement(Player* player, int* i, int* j, int* k, int* l, int* captured1,
 {
 	int validMovement=0;
 	char* command = player->command;
+	char invalidMessage[100];
 
 	*i = rankIndexToInt((command)[1]);
 	*j = fileIndexToInt((command)[0]);
@@ -293,12 +294,16 @@ int nextMovement(Player* player, int* i, int* j, int* k, int* l, int* captured1,
 	player->isCastling = (!(player->isChess) && !(player->hasCastled) && testCastling(player, *i, *j, *k, *l));
 	if(!player->isCastling)
 	{
-		validMovement = canMovePiece(player,*i,*j,*k,*l,captured1,captured2,0,0);
+		validMovement = canMovePiece(player,*i,*j,*k,*l,captured1,captured2,1,invalidMessage);
 		if(validMovement == -1)
 		{
 			fprintf(stderr,"canMovePiece returned error\n");
 			return -1;
 		}
+	}
+	if(!validMovement)
+	{
+		printf("%s",invalidMessage);
 	}
 
 	return validMovement;
