@@ -2,22 +2,8 @@
 #include <stdlib.h>
 #include "board.h"
 
-
-// test if the board contain the square (i,j)
-int existSquare(int i, int j)
-{
-	if( i < 0 || j < 0 ||  i > 7 || j > 7 )
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}
-
-// test if the piece can be moved
-int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int* captured2, int withoutChess, char* invalidMessage)
+// test if the piece i,j of player can be moved to k,l
+int canMovePiece(Player* player, Player* adversary, int i, int j, int k, int l, int* captured1, int* captured2, int withoutChess, char* invalidMessage)
 {
 	int allowedMovement = 0;
 	int isEnPassantCapture = 0;
@@ -38,7 +24,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 
 	Piece* piece = cb.array[i][j].piece;
 
-	if( ((getColor(i,j) != player->color) && withoutChess) || ( (getColor(i,j) == player->color)  && !withoutChess))
+	if( getColor(i,j) != player->color )
 	{
 		if(invalidMessage!=NULL)
 		{
@@ -98,7 +84,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 	}
 	else if(withoutChess)
 	{
-		// test if the move lead to chess
+		// test if the move i,j -> k,l would lead player to chess
 		int chess;
 
 		if(!isEnPassantCapture)
@@ -112,7 +98,7 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 		movePiece(i,j,k,l);
 		setI(cb.array[k][l].piece, k, cb.counterMove);
 		setJ(cb.array[k][l].piece, l, cb.counterMove);
-		chess = testChess(player);
+		chess = testChess(adversary,player);
 		if(chess == -1)
 		{
 			fprintf(stderr,"testChess returned error\n");
@@ -139,6 +125,82 @@ int canMovePiece(Player* player, int i, int j, int k, int l, int* captured1, int
 	}
 }
 
+// test if the king of adversary can be captured by a piece of player
+int testChess(Player* player, Player* adversary)
+{
+	int ret;
+
+	ret = canBeEaten(adversary,player,adversary->king->i[cb.counterMove], adversary->king->j[cb.counterMove],0);
+	if(ret == -1)
+	{
+		fprintf(stderr,"canBeEaten returned error\n");
+		return -1;
+	}
+	return ret;
+}
+
+// test if the piece on the position (k,l) of player can be captured by the adversary
+int canBeEaten(Player* player,Player* adversary, int k, int l, int testChess)
+{
+	int i,j,ret;
+	if(!existSquare(k,l) || isEmptySquare(k,l))
+	{
+		return -1;
+	}
+	for(i=0;i<8;i++)
+	{
+		for(j=0;j<8;j++)
+		{
+			ret = canMovePiece(adversary,player,i,j,k,l,NULL,NULL,testChess,NULL);
+			if(ret == -1)
+			{
+				fprintf(stderr,"canMovePiece returned error\n");
+				return -1;
+			}
+			else if(ret == 1)
+			{
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+// test if the king of player can be unavoidably capured by the adversary regardless the next movement
+int canDoLegalMove(Player* player, Player* adversary)
+{
+	int i,j,k,l,m=0,n=0;
+	int ret;
+	Color color = player->color;
+
+	for(i=0;i<8;i++)
+	{
+		for(j=0;j<8;j++)
+		{
+			if(cb.array[i][j].isOccupied && (cb.array[i][j].piece->color == color))
+			{
+				for(k=0;k<8;k++)
+				{
+					for(l=0;l<8;l++)
+					{
+						ret = canMovePiece(player,adversary,i,j,k,l,&m,&n,1,NULL);
+						if(ret == -1)
+						{
+							fprintf(stderr,"canMovePiece returned error\n");
+							return -1;
+						}
+						else if(ret == 1)
+						{
+							return 1;
+						}
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 // test is the case is occupied by a piece of the other player
 int isCapturingPiece(Color playerColor, int i, int j)
 {
@@ -149,8 +211,8 @@ int isCapturingPiece(Color playerColor, int i, int j)
 	return 0;
 }
 
-// test if the castle movement is possible
-int testCastling(Player* player, int i, int j, int k, int l)
+// test if player can execute the castle movement
+int testCastling(Player* player, Player* adversary, int i, int j, int k, int l)
 {
 	if( isEmptySquare(i,j) || isEmptySquare(k,l) || (getColor(i,j) != player->color)  || (getColor(i,j) != player->color)
 		|| hasMoved(getPiece(i,j), cb.counterMove) || hasMoved(getPiece(k,l), cb.counterMove) )
@@ -161,11 +223,11 @@ int testCastling(Player* player, int i, int j, int k, int l)
 	{
 		if( i==0 && j==4 && k==0 && (l==0 || l==7 ) )
 		{
-			if(l==0 && !canBeEaten(player,0,3,0) && !canBeEaten(player,0,2,0) && isEmptyBetween(0,4,0,0))
+			if(l==0 && !canBeEaten(player,adversary,0,3,0) && !canBeEaten(player,adversary,0,2,0) && isEmptyBetween(0,4,0,0))
 			{
 				return 1;
 			}
-			else if(l==7 && !canBeEaten(player,0,5,0) && !canBeEaten(player,0,6,0) && isEmptyBetween(0,5,0,7))
+			else if(l==7 && !canBeEaten(player,adversary,0,5,0) && !canBeEaten(player,adversary,0,6,0) && isEmptyBetween(0,5,0,7))
 			{
 				return 1;
 			}
@@ -175,11 +237,11 @@ int testCastling(Player* player, int i, int j, int k, int l)
 	{
 		if(i==7 && j==4 && k==7 && (l==0 || l==7 ) )
 		{
-			if(l==0 && !canBeEaten(player,7,3,0) && !canBeEaten(player,7,2,0) && isEmptyBetween(7,4,7,0))
+			if(l==0 && !canBeEaten(player,adversary,7,3,0) && !canBeEaten(player,adversary,7,2,0) && isEmptyBetween(7,4,7,0))
 			{
 				return 1;
 			}
-			else if(l==7 && !canBeEaten(player,7,5,0) && !canBeEaten(player,7,6,0) && isEmptyBetween(7,5,7,7))
+			else if(l==7 && !canBeEaten(player,adversary,7,5,0) && !canBeEaten(player,adversary,7,6,0) && isEmptyBetween(7,5,7,7))
 			{
 				return 1;
 			}
@@ -400,80 +462,17 @@ int updateBoard(Player* player, int i, int j, int k, int l, int captured1, int c
     return 0;
 }
 
-// test if the king of player can be captured by the adversary
-int testChess(Player* player)
+// test if the board contain the square (i,j)
+int existSquare(int i, int j)
 {
-	int ret;
-
-	ret = canBeEaten(player, player->king->i[cb.counterMove], player->king->j[cb.counterMove],0);
-	if(ret == -1)
+	if( i < 0 || j < 0 ||  i > 7 || j > 7 )
 	{
-		fprintf(stderr,"canBeEaten returned error\n");
-		return -1;
+		return 0;
 	}
-	return ret;
-}
-
-// test if the Piece on the position (k,l) of player can be captured by the adversary
-int canBeEaten(Player* player, int k, int l, int testChess)
-{
-	int i,j,ret;
-	if(!existSquare(k,l) || isEmptySquare(k,l))
+	else
 	{
-		return -1;
+		return 1;
 	}
-	for(i=0;i<8;i++)
-	{
-		for(j=0;j<8;j++)
-		{
-			ret = canMovePiece(player,i,j,k,l,NULL,NULL,testChess,NULL);
-			if(ret == -1)
-			{
-				fprintf(stderr,"canMovePiece returned error\n");
-				return -1;
-			}
-			else if(ret == 1)
-			{
-				return 1;
-			}
-		}
-	}
-	return 0;
-}
-
-// test if the king of player can be unavoidably capured by the adversary
-int canDoLegalMove(Player* player)
-{
-	int i,j,k,l,m=0,n=0;
-	int ret;
-	Color color = player->color;
-
-	for(i=0;i<8;i++)
-	{
-		for(j=0;j<8;j++)
-		{
-			if(cb.array[i][j].isOccupied && (cb.array[i][j].piece->color == color))
-			{
-				for(k=0;k<8;k++)
-				{
-					for(l=0;l<8;l++)
-					{
-						ret = canMovePiece(player,i,j,k,l,&m,&n,1,NULL);
-						if(ret == -1)
-						{
-							fprintf(stderr,"canMovePiece returned error\n");
-							return -1;
-						}
-						else if(ret == 1)
-						{
-							return 1;
-						}
-					}
-				}
-			}
-		}
-	}
-	return 0;
 }
 
 Piece* getPiece(int i, int j)
