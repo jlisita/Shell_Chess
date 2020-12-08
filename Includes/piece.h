@@ -1,6 +1,9 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+typedef struct Board Board;
+struct Board;
+
 typedef enum Name Name;
 enum Name
 {
@@ -46,7 +49,7 @@ int whitePawnStraightMovement(int i, int j, int k, int l);
 int whitePawnCaptureMovement(int i, int j, int k, int l);
 int blackPawnStraightMovement(int i, int j, int k, int l);
 int blackPawnCaptureMovement(int i, int j, int k, int l);
-int enPassantCapture(int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture);
+int enPassantCapture(struct Board* board,int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture);
 
 
 #endif

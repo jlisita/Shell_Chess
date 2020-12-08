@@ -185,12 +185,12 @@ int blackPawnCaptureMovement(int i, int j, int k, int l)
 	return 0;
 }
 
-int enPassantCapture(int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture)
+int enPassantCapture(Board* board, int i, int j, int k, int l, int* m, int* n, int* isEnPassantCapture)
 {
-	if(getColor(i,j) == WHITE)
+	if(getColor(board,i,j) == WHITE)
 	{
-	 	if( (k==i+1) && ((l==j+1) || (l==j-1)) && isEmptySquare(k,l) && !isEmptySquare(k,j) && (getColor(k,j)==BLACK) && (getName(k,j)==PAWN)
-	 		&& (getI(getPiece(k,j),cb.counterMove)==4) && ( getLastI(getPiece(k,j),cb.counterMove)==6))
+	 	if( (k==i+1) && ((l==j+1) || (l==j-1)) && isEmptySquare(board,k,l) && !isEmptySquare(board,k,j) && (getColor(board,k,j)==BLACK) && (getName(board,k,j)==PAWN)
+	 		&& (getI(getPiece(board,k,j),board->counterMove)==4) && ( getLastI(getPiece(board,k,j),board->counterMove)==6))
 	 	{
 	 		*m = k;
 	 		*n = j;
@@ -200,8 +200,8 @@ int enPassantCapture(int i, int j, int k, int l, int* m, int* n, int* isEnPassan
 	}
 	else
 	{
-		if( (k==i-1) && ((l==j+1) || (l==j-1)) && isEmptySquare(k,l) && !isEmptySquare(k,j) && (getColor(k,j)==WHITE) && (getName(k,j)==PAWN)
-		  && (getI(getPiece(k,j),cb.counterMove) == 3) && ( getLastI(getPiece(k,j),cb.counterMove)==1) )
+		if( (k==i-1) && ((l==j+1) || (l==j-1)) && isEmptySquare(board,k,l) && !isEmptySquare(board,k,j) && (getColor(board,k,j)==WHITE) && (getName(board,k,j)==PAWN)
+		  && (getI(getPiece(board,k,j),board->counterMove) == 3) && ( getLastI(getPiece(board,k,j),board->counterMove)==1) )
 		{
 			*m = k;
 	 		*n = j;

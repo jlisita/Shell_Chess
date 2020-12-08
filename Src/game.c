@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include "game.h"
+#include "board.h"
 #include "cmd_interface.h"
 #include "socket.h"
 
@@ -113,15 +114,15 @@ int localGame()
 
 	do
 	{
-		printGame(game->currentPlayer, game->nextPlayer, game->recordedMoves);
+		printGame(game->board, game->currentPlayer, game->nextPlayer, game->recordedMoves);
 
-		if(turn(game->currentPlayer,game->nextPlayer,game->recordedMoves) == -1)
+		if(turn(game->board, game->currentPlayer,game->nextPlayer,game->recordedMoves) == -1)
 		{
 			fprintf(stderr,"turn returned error\n");
 			return -1;
 		}
 
-		game->endOfGame = endOfGame(game->currentPlayer, game->nextPlayer);
+		game->endOfGame = endOfGame(game->board, game->currentPlayer, game->nextPlayer);
 		if(game->endOfGame == -1)
 		{
 			fprintf(stderr,"endOfGame returned error\n");
@@ -140,7 +141,7 @@ int localGame()
 
 	}while(!game->endOfGame);
 
-	printGame(game->currentPlayer, game->nextPlayer, game->recordedMoves);
+	printGame(game->board,game->currentPlayer, game->nextPlayer, game->recordedMoves);
 	deleteGame(game);
 	game = NULL;
 
@@ -174,7 +175,9 @@ Game* createGame()
 	game->currentPlayer = game->player;
 	game->nextPlayer = game->adversary;
 
-	if(initializeBoard(game->player,game->adversary)==-1)
+	game->board = createBoard(game->player,game->adversary);
+
+	if(game->board == NULL)
 	{
 		fprintf(stderr,"initializeBoard returned error\n");
 		return NULL;
@@ -190,12 +193,13 @@ int deleteGame(Game* game)
 	}
 	deletePlayer(game->player);
 	deletePlayer(game->adversary);
+	deleteBoard(game->board);
 	free(game);
 	return 0;
 }
 
 // manage command entry and update game
-int turn(Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
+int turn(Board* board, Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
 {
 	int i,j,k,l;
 	int captured1=0, captured2=0;
@@ -214,7 +218,7 @@ int turn(Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
 			return 0;
 		}
 
-		validMovement = nextMovement(currentPlayer, nextPlayer, &i, &j, &k, &l, &captured1, &captured2);
+		validMovement = nextMovement(board, currentPlayer, nextPlayer, &i, &j, &k, &l, &captured1, &captured2);
 		if(validMovement == -1)
 		{
 			fprintf(stderr,"nextMovement returned error\n");
@@ -223,15 +227,15 @@ int turn(Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
 
 	}while(!validMovement);
 
-	cb.counterMove++;
-    if(updateBoard(currentPlayer, i, j, k, l, captured1, captured2)==-1)
+	incrementCounterMove(board);
+    if(updateBoard(board, currentPlayer, i, j, k, l, captured1, captured2)==-1)
     {
     	fprintf(stderr,"updateBoard returned error\n");
     	return -1;
     }
     if(!currentPlayer->isCastling)
     {
-    	promotion(k,l);
+    	promotion(board,k,l);
     }
 
 	updateRecordedMoves(currentPlayer,recordedMoves);
@@ -280,7 +284,7 @@ int verifyCommand(Player* player)
 }
 
 // test if the movement asked by the player is possible
-int nextMovement(Player* currentPlayer, Player* nextPlayer, int* i, int* j, int* k, int* l, int* captured1, int* captured2)
+int nextMovement(Board* board, Player* currentPlayer, Player* nextPlayer, int* i, int* j, int* k, int* l, int* captured1, int* captured2)
 {
 	int validMovement=0;
 	char* command = currentPlayer->command;
@@ -291,10 +295,10 @@ int nextMovement(Player* currentPlayer, Player* nextPlayer, int* i, int* j, int*
 	*k = rankIndexToInt((command)[4]);
 	*l = fileIndexToInt((command)[3]);
 
-	currentPlayer->isCastling = (!(currentPlayer->isChess) && !(currentPlayer->hasCastled) && testCastling(currentPlayer,nextPlayer, *i, *j, *k, *l));
+	currentPlayer->isCastling = (!(currentPlayer->isChess) && !(currentPlayer->hasCastled) && testCastling(board, currentPlayer,nextPlayer, *i, *j, *k, *l));
 	if(!currentPlayer->isCastling)
 	{
-		validMovement = canMovePiece(currentPlayer,nextPlayer,*i,*j,*k,*l,captured1,captured2,1,invalidMessage);
+		validMovement = canMovePiece(board, currentPlayer,nextPlayer,*i,*j,*k,*l,captured1,captured2,1,invalidMessage);
 		if(validMovement == -1)
 		{
 			fprintf(stderr,"canMovePiece returned error\n");
@@ -326,19 +330,19 @@ void updateRecordedMoves(Player* player, char* recordedMoves)
 }
 
 // Update variable isChess, isMat,  and test if the game sould be stop
-int endOfGame(Player* currentPlayer, Player* nextPlayer)
+int endOfGame(Board* board, Player* currentPlayer, Player* nextPlayer)
 {
 	if(!currentPlayer->abandonment)
 	{
 		int legalMove = 0;
 		int chess = 0;
-		legalMove = canDoLegalMove(nextPlayer,currentPlayer);
+		legalMove = canDoLegalMove(board, nextPlayer,currentPlayer);
 		if(legalMove == -1)
 		{
 			fprintf(stderr,"legalMove returned error\n");
 			return -1;
 		}
-		chess = testChess(currentPlayer,nextPlayer);
+		chess = testChess(board, currentPlayer,nextPlayer);
 		if(chess == -1)
 		{
 			fprintf(stderr,"testChess returned error\n");
@@ -387,6 +391,7 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 	int gameOver = 0;
 	Player* currentPlayer = NULL;
 	Player* nextPlayer = NULL;
+	Board* board = NULL;
 
 	if(mode==1)
 	{
@@ -445,7 +450,8 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 		nextPlayer = player;
 	}
 
-	if(initializeBoard(player,adversary)==-1)
+	board = createBoard(player,adversary);
+	if(board == NULL)
 	{
 		fprintf(stderr,"initializeBoard returned error\n");
 		return -1;
@@ -453,15 +459,15 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	do
 	{
-		printGame(currentPlayer, nextPlayer, recordedMoves);
+		printGame(board, currentPlayer, nextPlayer, recordedMoves);
 
-		if(turnOnline(currentPlayer, nextPlayer, player->isPlaying, recordedMoves, socketClient)==-1)
+		if(turnOnline(board, currentPlayer, nextPlayer, player->isPlaying, recordedMoves, socketClient)==-1)
 		{
 			fprintf(stderr,"turnOnline returned error\n");
 			return -1;
 		}
 
-		gameOver = endOfGame(currentPlayer, nextPlayer);
+		gameOver = endOfGame(board, currentPlayer, nextPlayer);
 		if(gameOver == -1)
 		{
 			fprintf(stderr,"turnOnline returned error\n");
@@ -480,16 +486,18 @@ int onlineGame(Profil* myProfil, Profil* adversaryProfil, int mode)
 
 	}while(!gameOver);
 
-	printGame(currentPlayer, nextPlayer, recordedMoves);
+	printGame(board, currentPlayer, nextPlayer, recordedMoves);
 	deletePlayer(player);
 	player = NULL;
 	deletePlayer(adversary);
 	adversary = NULL;
+	deleteBoard(board);
+	board = NULL;
 
 	return 0;
 }
 
-int turnOnline(Player* currentPlayer,Player* nextPlayer,  int isPlaying, char* recordedMoves, int socketClient)
+int turnOnline(Board* board, Player* currentPlayer,Player* nextPlayer,  int isPlaying, char* recordedMoves, int socketClient)
 {
 	int i=0,j=0,k=0,l=0;
 	int ret;
@@ -512,7 +520,7 @@ int turnOnline(Player* currentPlayer,Player* nextPlayer,  int isPlaying, char* r
 				return 0;
 			}
 
-			validMovement = nextMovement(currentPlayer, nextPlayer, &i, &j, &k, &l, &captured1, &captured2);
+			validMovement = nextMovement(board, currentPlayer, nextPlayer, &i, &j, &k, &l, &captured1, &captured2);
 
 		}while(!validMovement);
 
@@ -538,7 +546,7 @@ int turnOnline(Player* currentPlayer,Player* nextPlayer,  int isPlaying, char* r
 			return 0;
 		}
 
-		ret = nextMovement(currentPlayer,nextPlayer, &i, &j, &k, &l, &captured1, &captured2);
+		ret = nextMovement(board, currentPlayer,nextPlayer, &i, &j, &k, &l, &captured1, &captured2);
 		if(ret == -1)
 		{
 			fprintf(stderr,"nextMovement returned error\n");
@@ -546,15 +554,15 @@ int turnOnline(Player* currentPlayer,Player* nextPlayer,  int isPlaying, char* r
 
 	}
 
-	cb.counterMove++;
-    if(updateBoard(currentPlayer, i, j, k, l, captured1, captured2)==-1)
+	incrementCounterMove(board);
+    if(updateBoard(board, currentPlayer, i, j, k, l, captured1, captured2)==-1)
     {
     	fprintf(stderr,"updateBoard returned error\n");
     	return -1;
     }
     if(!currentPlayer->isCastling)
     {
-    	if(promotionOnline(currentPlayer,k,l,socketClient) == -1)
+    	if(promotionOnline(board, currentPlayer,k,l,socketClient) == -1)
     	{
     		fprintf(stderr,"nextMovement returned error\n");
     		return -1;
@@ -565,13 +573,13 @@ int turnOnline(Player* currentPlayer,Player* nextPlayer,  int isPlaying, char* r
 	return 0;
 }
 
- void printGame(Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
+ void printGame(Board* board, Player* currentPlayer, Player* nextPlayer, char* recordedMoves)
  {
  	printf("%s\n",recordedMoves);
 	printf("Pieces captured by you: ");
 	printListPieces(currentPlayer->capuredPieces);
 	printf("Pieces captured by %s: ",nextPlayer->name);
 	printListPieces(nextPlayer->capuredPieces);
-	printBoard(currentPlayer->color);
+	printBoard(board,currentPlayer->color);
  }
 

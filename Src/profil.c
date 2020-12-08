@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include "game.h"
+#include "cmd_interface.h"
 #include "profil.h"
 
 int createProfil(Profil* myProfil)
