@@ -27,16 +27,17 @@ struct Piece
 {
 	Color color;
 	Name name;
-	int i[100];
-	int j[100];
+	// position of piece for all game turns
+	int posI[100]; 
+	int posJ[100];
 };
 
 
-int getI(Piece* piece, int counterMove);
-int getLastI(Piece* piece, int counterMove);
-int getJ(Piece* piece, int counterMove);
-void setI(Piece* piece, int i, int counterMove);
-void setJ(Piece* piece, int j, int counterMove);
+int getPosI(Piece* piece, int counterMove);
+int getLastPosI(Piece* piece, int counterMove);
+int getPosJ(Piece* piece, int counterMove);
+void setPosI(Piece* piece, int i, int counterMove);
+void setPosJ(Piece* piece, int j, int counterMove);
 void printfPiece(Piece* piece);
 int hasMoved(Piece* piece, int counterMove);
 int kingMovement(int i, int j, int k, int l);
