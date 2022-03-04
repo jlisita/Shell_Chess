@@ -125,7 +125,7 @@ Color getColor(Board* board, int i, int j)
 
 Name getName(Board* board, int i, int j)
 {
-	if(!existSquare(i,j) && isEmptySquare(board,i,j))
+	if(!existSquare(i,j) || isEmptySquare(board,i,j))
 	{
 		return -1;
 	}
@@ -134,7 +134,7 @@ Name getName(Board* board, int i, int j)
 
 int setName(Board* board, int i, int j, Name name)
 {
-	if(!existSquare(i,j) && isEmptySquare(board,i,j))
+	if(!existSquare(i,j) || isEmptySquare(board,i,j))
 	{
 		return -1;
 	}
