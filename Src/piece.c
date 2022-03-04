@@ -53,18 +53,6 @@ int hasMoved(Piece* piece, int counterMove)
 }
 
 // test if the king can be moved
-int canMoveKing(int i, int j, int k, int l)
-{
-	if( ( (k-i==1) &&  ( (j==l) || (l-j==1) || (l-j==-1) ) )
-	||  ( (k-i==-1) && ( (j==l) || (l-j==1) || (l-j==-1) ) )
-	||  ( (k-i==0) && ( (l-j==1) || (l-j==-1) ) ) )
-	{
-		return 1;
-	}
-	return 0;
-}
-
-// test if the king can be moved
 int kingMovement(int i, int j, int k, int l)
 {
 	if( ( (k-i==1) &&  ( (j==l) || (l-j==1) || (l-j==-1) ) )
