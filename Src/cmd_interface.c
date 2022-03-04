@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-
+#include "cmd_interface.h"
 #include "game.h"
 
 int menuMode(int* mode)
