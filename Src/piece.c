@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "piece.h"
 #include "board.h"
 
 int getI(Piece* piece, int counterMove)
