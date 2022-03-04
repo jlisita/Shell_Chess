@@ -3,48 +3,48 @@
 #include "piece.h"
 #include "board.h"
 
-int getI(Piece* piece, int counterMove)
+int getPosI(Piece* piece, int counterMove)
 {
-	return piece->i[counterMove];
+	return piece->posI[counterMove];
 }
 
-int getLastI(Piece* piece, int counterMove)
+int getLastPosI(Piece* piece, int counterMove)
 {
-	int i = piece->i[counterMove];
+	int i = piece->posI[counterMove];
 	int k;
 	for(k=counterMove-1; k>=0; k--)
 	{
-		if(piece->i[k]!=i)
+		if(piece->posI[k]!=i)
 		{
-			return piece->i[k];
+			return piece->posI[k];
 		}
 	}
 	return i;
 }
 
-int getJ(Piece* piece, int counterMove)
+int getPosJ(Piece* piece, int counterMove)
 {
-	return piece->j[counterMove];
+	return piece->posJ[counterMove];
 }
 
-void setI(Piece* piece, int i, int counterMove)
+void setPosI(Piece* piece, int i, int counterMove)
 {
-	piece->i[counterMove] = i;
+	piece->posI[counterMove] = i;
 }
 
-void setJ(Piece* piece, int j, int counterMove)
+void setPosJ(Piece* piece, int j, int counterMove)
 {
-	piece->j[counterMove] = j;
+	piece->posJ[counterMove] = j;
 }
 
 int hasMoved(Piece* piece, int counterMove)
 {
 	int k;
-	int i = getI(piece, 0);
-	int j = getJ(piece, 0);
+	int i = getPosI(piece, 0);
+	int j = getPosJ(piece, 0);
 	for(k=0;k<=counterMove;k++)
 	{
-		if(getI(piece,k)!=i || getJ(piece,k)!=j)
+		if(getPosI(piece,k)!=i || getPosJ(piece,k)!=j)
 		{
 			return 1;
 		}
@@ -179,7 +179,7 @@ int enPassantCapture(Board* board, int i, int j, int k, int l, int* m, int* n, i
 	if(getColor(board,i,j) == WHITE)
 	{
 	 	if( (k==i+1) && ((l==j+1) || (l==j-1)) && isEmptySquare(board,k,l) && !isEmptySquare(board,k,j) && (getColor(board,k,j)==BLACK) && (getName(board,k,j)==PAWN)
-	 		&& (getI(getPiece(board,k,j),board->counterMove)==4) && ( getLastI(getPiece(board,k,j),board->counterMove)==6))
+	 		&& (getPosI(getPiece(board,k,j),board->counterMove)==4) && ( getLastPosI(getPiece(board,k,j),board->counterMove)==6))
 	 	{
 	 		*m = k;
 	 		*n = j;
@@ -190,7 +190,7 @@ int enPassantCapture(Board* board, int i, int j, int k, int l, int* m, int* n, i
 	else
 	{
 		if( (k==i-1) && ((l==j+1) || (l==j-1)) && isEmptySquare(board,k,l) && !isEmptySquare(board,k,j) && (getColor(board,k,j)==WHITE) && (getName(board,k,j)==PAWN)
-		  && (getI(getPiece(board,k,j),board->counterMove) == 3) && ( getLastI(getPiece(board,k,j),board->counterMove)==1) )
+		  && (getPosI(getPiece(board,k,j),board->counterMove) == 3) && ( getLastPosI(getPiece(board,k,j),board->counterMove)==1) )
 		{
 			*m = k;
 	 		*n = j;

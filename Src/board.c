@@ -260,7 +260,7 @@ int isEmptyBetween(Board* board, int i, int j, int k, int l)
 }
 
 // test if the piece i,j of player can be moved to k,l
-int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, int k, int l, int* captured1, int* captured2, int withoutChess, char* invalidMessage)
+int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, int k, int l, int* captured1, int* captured2, int testLeadToChess, char* invalidMessage)
 {
 	int allowedMovement = 0;
 	int isEnPassantCapture = 0;
@@ -280,16 +280,16 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 	}
 
 	Piece* piece = getPiece(board,i,j);
-
+	// test if the piece belongs to the player
 	if( getColor(board,i,j) != player->color )
 	{
 		if(invalidMessage!=NULL)
 		{
-			sprintf(invalidMessage,"Can't move this piece\n");
+			sprintf(invalidMessage,"Can't move an adversary's piece\n");
 		}
 		return 0;
 	}
-
+	// Test if no piece is blocking player's movement
 	if(piece->name != KNIGHT && !isEmptyBetween(board,i,j,k,l))
 	{
 		if(invalidMessage!=NULL)
@@ -298,7 +298,7 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		}
 		return 0;
 	}
-
+	// Test is the captured piece does not belong to the player
 	if( !isEmptySquare(board,k,l) && (getColor(board,i,j) ==  getColor(board,k,l)) )
 	{
 		if(invalidMessage!=NULL)
@@ -307,7 +307,7 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		}
 		return 0;
 	}
-
+	// test if movement is allowed depending on the type of piece
 	switch(piece->name)
 	{
 		case KING:
@@ -339,7 +339,7 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		}
 		return 0;
 	}
-	else if(withoutChess)
+	else if(testLeadToChess)
 	{
 		// test if the move i,j -> k,l would lead player to chess
 		int chess;
@@ -349,12 +349,14 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 			*captured1 = k;
 			*captured2 = l;
 		}
+		// save capture piece in temporary pointeur
 		tempPiece = board->array[*captured1][*captured2].piece;
+		// upload position of pieces
 		board->array[*captured1][*captured2].piece = NULL;
 		board->array[*captured1][*captured2].isOccupied = 0;
 		movePiece(board,i,j,k,l);
-		setI(board->array[k][l].piece, k, board->counterMove);
-		setJ(board->array[k][l].piece, l, board->counterMove);
+		setPosI(board->array[k][l].piece, k, board->counterMove);
+		setPosJ(board->array[k][l].piece, l, board->counterMove);
 		chess = testChess(board,adversary,player);
 		if(chess == -1)
 		{
@@ -365,10 +367,10 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		{
 			sprintf(invalidMessage,"This move would lead to chess\n");
 		}
-
+		// restore position of pieces after test
 		movePiece(board,k,l,i,j);
-		setI(board->array[i][j].piece, i, board->counterMove);
-		setJ(board->array[i][j].piece, j, board->counterMove);
+		setPosI(board->array[i][j].piece, i, board->counterMove);
+		setPosJ(board->array[i][j].piece, j, board->counterMove);
 		if(tempPiece!=NULL)
 		{
 			board->array[*captured1][*captured2].piece = tempPiece;
@@ -387,7 +389,7 @@ int testChess(Board* board, Player* player, Player* adversary)
 {
 	int ret;
 
-	ret = canBeEaten(board,adversary,player,adversary->king->i[board->counterMove], adversary->king->j[board->counterMove],0);
+	ret = canBeEaten(board,adversary,player,adversary->king->posI[board->counterMove], adversary->king->posJ[board->counterMove],0);
 	if(ret == -1)
 	{
 		fprintf(stderr,"canBeEaten returned error\n");
@@ -674,8 +676,8 @@ void updatePosition(Board* board)
 		{
 			if(!isEmptySquare(board,i,j))
 			{
-				setI(board->array[i][j].piece, i, board->counterMove);
-				setJ(board->array[i][j].piece, j, board->counterMove);
+				setPosI(board->array[i][j].piece, i, board->counterMove);
+				setPosJ(board->array[i][j].piece, j, board->counterMove);
 			}
 		}
 	}
