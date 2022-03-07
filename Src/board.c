@@ -281,7 +281,7 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 
 	Piece* piece = getPiece(board,i,j);
 	// test if the piece belongs to the player
-	if( getColor(board,i,j) != player->color )
+	if( piece->color != player->color )
 	{
 		if(invalidMessage!=NULL)
 		{
@@ -299,7 +299,7 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		return 0;
 	}
 	// Test is the captured piece does not belong to the player
-	if( !isEmptySquare(board,k,l) && (getColor(board,i,j) ==  getColor(board,k,l)) )
+	if( !isEmptySquare(board,k,l) && (piece->color ==  getColor(board,k,l)) )
 	{
 		if(invalidMessage!=NULL)
 		{
@@ -355,8 +355,8 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		board->array[*captured1][*captured2].piece = NULL;
 		board->array[*captured1][*captured2].isOccupied = 0;
 		movePiece(board,i,j,k,l);
-		setPosI(board->array[k][l].piece, k, board->counterMove);
-		setPosJ(board->array[k][l].piece, l, board->counterMove);
+		setRaw(board->array[k][l].piece, k, board->counterMove);
+		setColumn(board->array[k][l].piece, l, board->counterMove);
 		chess = testChess(board,adversary,player);
 		if(chess == -1)
 		{
@@ -369,8 +369,8 @@ int canMovePiece(Board* board, Player* player, Player* adversary, int i, int j, 
 		}
 		// restore position of pieces after test
 		movePiece(board,k,l,i,j);
-		setPosI(board->array[i][j].piece, i, board->counterMove);
-		setPosJ(board->array[i][j].piece, j, board->counterMove);
+		setRaw(board->array[i][j].piece, i, board->counterMove);
+		setColumn(board->array[i][j].piece, j, board->counterMove);
 		if(tempPiece!=NULL)
 		{
 			board->array[*captured1][*captured2].piece = tempPiece;
@@ -389,7 +389,7 @@ int testChess(Board* board, Player* player, Player* adversary)
 {
 	int ret;
 
-	ret = canBeEaten(board,adversary,player,adversary->king->posI[board->counterMove], adversary->king->posJ[board->counterMove],0);
+	ret = canBeEaten(board,adversary,player,adversary->king->raw[board->counterMove], adversary->king->column[board->counterMove],0);
 	if(ret == -1)
 	{
 		fprintf(stderr,"canBeEaten returned error\n");
@@ -577,7 +577,7 @@ int promotion(Board* board, int i, int j)
 	{
 		do
 		{
-			menuCasling(&selectedPiece);
+			menuPromotion(&selectedPiece);
 
 		}while(selectedPiece < 1 || selectedPiece > 4 );
 		switch(selectedPiece)
@@ -614,7 +614,7 @@ int promotionOnline(Board* board, Player* player, int i, int j, int socket)
 	{
 		do
 		{
-			menuCasling(&selectedPiece);
+			menuPromotion(&selectedPiece);
 
 		}while(selectedPiece < 1 || selectedPiece > 4 );
 
@@ -676,8 +676,8 @@ void updatePosition(Board* board)
 		{
 			if(!isEmptySquare(board,i,j))
 			{
-				setPosI(board->array[i][j].piece, i, board->counterMove);
-				setPosJ(board->array[i][j].piece, j, board->counterMove);
+				setRaw(board->array[i][j].piece, i, board->counterMove);
+				setColumn(board->array[i][j].piece, j, board->counterMove);
 			}
 		}
 	}

@@ -7,7 +7,7 @@ int menuMode(int* mode);
 int menuOnline(int* ret, ListProfil* friends);
 int menuColor(int* ret);
 int menuGame();
-int menuCasling(int* ret);
+int menuPromotion(int* ret);
 int readString(char* string, int sizeMax);
 int readInt();
 void freeBuffer();

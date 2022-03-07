@@ -61,8 +61,8 @@ Player* createPlayer(char* name,Color color)
 		player->pieces[i]->color = color;
 		for(j=0;j<100;j++)
 		{
-			player->pieces[i]->posI[j] = 0;
-			player->pieces[i]->posJ[j] = 0;
+			player->pieces[i]->raw[j] = 0;
+			player->pieces[i]->column[j] = 0;
 		}
 	}
 
@@ -82,14 +82,14 @@ Player* createPlayer(char* name,Color color)
 
 	for(i=0;i<8;i++)
 	{
-		player->pieces[i]->posJ[0] = i;
+		player->pieces[i]->raw[0] = i;
 		if(color==WHITE)
 		{
-			player->pieces[i]->posI[0] = 0;
+			player->pieces[i]->raw[0] = 0;
 		}
 		else
 		{
-			player->pieces[i]->posI[0] = 7;
+			player->pieces[i]->raw[0] = 7;
 		}
 	}
 
@@ -97,13 +97,13 @@ Player* createPlayer(char* name,Color color)
 	{
 		if(color == WHITE)
 		{
-			player->pieces[i]->posI[0] = 1;
-			player->pieces[i]->posJ[0] = i - 8;
+			player->pieces[i]->raw[0] = 1;
+			player->pieces[i]->column[0] = i - 8;
 		}
 		else
 		{
-			player->pieces[i]->posI[0] = 6;
-			player->pieces[i]->posJ[0] = i - 8;
+			player->pieces[i]->raw[0] = 6;
+			player->pieces[i]->column[0] = i - 8;
 		}
 	}
 	player->king = player->pieces[4];

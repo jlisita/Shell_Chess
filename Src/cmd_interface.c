@@ -158,7 +158,7 @@ int menuGame()
 	return 0;
 }
 
-int menuCasling(int* ret)
+int menuPromotion(int* ret)
 {
 	printf("Choose the new piece\n");
 	printf("1. Bishop\n");
